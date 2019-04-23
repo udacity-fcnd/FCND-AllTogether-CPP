@@ -131,150 +131,6 @@ void relax_points(const jcv_diagram* diagram, jcv_point* points) {
   }
 }
 
-// Search for any of the common characters: \n,;
-inline int is_csv(const char* chars, uint32_t len) {
-  for (uint32_t i = 0; i < len; ++i) {
-    char c = chars[i];
-    if (c == '\n' || c == ',' || c == ' ' || c == ';' || c == '\t') return 1;
-  }
-  return 0;
-}
-
-int debug_skip_point(const jcv_point* pt) {
-  (void)pt;
-  return 0;
-}
-
-int read_input(const char* path, jcv_point** points, uint32_t* length,
-               jcv_rect** rect) {
-  if (!path) {
-    return 1;
-  }
-
-  FILE* file = 0;
-  if (strcmp(path, "-") == 0)
-    file = stdin;
-  else
-    file = fopen(path, "rb");
-
-  if (!file) {
-    fprintf(stderr, "Failed to open %s for reading\n", path);
-    *length = 0;
-    return 1;
-  }
-
-  uint32_t capacity = 0;
-  uint32_t len = 0;
-  jcv_point* pts = 0;
-
-  int mode = -1;
-  const uint32_t buffersize = 64;
-  char* buffer = (char*)alloca(buffersize);
-  uint32_t bufferoffset = 0;
-
-  while (!feof(file)) {
-    size_t num_read =
-        fread((void*)&buffer[bufferoffset], 1, buffersize - bufferoffset, file);
-    num_read += bufferoffset;
-
-    if (mode == -1) {
-      mode = is_csv(buffer, (uint32_t)num_read);
-    }
-
-    if (mode == 0)  // binary
-    {
-      uint32_t num_points = (uint32_t)num_read / sizeof(jcv_point);
-      if (capacity < (len + num_points)) {
-        capacity += 1024;
-        pts = (jcv_point*)realloc(pts, sizeof(jcv_point) * capacity);
-      }
-      for (uint32_t i = 0; i < num_points; ++i) {
-        jcv_point* pt = &((jcv_point*)buffer)[i];
-        if (debug_skip_point(pt)) {
-          continue;
-        }
-        pts[len].x = pt->x;
-        pts[len].y = pt->y;
-        ++len;
-      }
-      bufferoffset = (uint32_t)num_read - num_points * sizeof(jcv_point);
-      memmove(buffer, &buffer[num_points * sizeof(jcv_point)], bufferoffset);
-    } else if (mode == 1)  // CSV mode
-    {
-      char* p = buffer;
-      char* end = &buffer[num_read];
-
-      while (p < end) {
-        char* r = p;
-        int end_of_line = 0;
-        while (r < end) {
-          if (*r == '\0') {
-            end_of_line = 1;
-            break;
-          }
-          if (*r == '\n') {
-            end_of_line = 1;
-            *r = 0;
-            r += 1;
-            break;
-          } else if ((*r == '\r' && *(r + 1) == '\n')) {
-            end_of_line = 1;
-            *r = 0;
-            r += 2;
-            break;
-          } else if (*r == ',' || *r == ';' || *r == ':') {
-            *r = ' ';
-          }
-          ++r;
-        }
-
-        if (end_of_line) {
-          jcv_point pt1;
-          jcv_point pt2;
-          int numscanned =
-              sscanf(p, "%f %f %f %f\n", &pt1.x, &pt1.y, &pt2.x, &pt2.y);
-
-          if (numscanned == 4) {
-            *rect = malloc(sizeof(jcv_rect));
-            (*rect)->min = pt1;
-            (*rect)->max = pt2;
-            p = r;
-          } else if (numscanned == 2) {
-            if (debug_skip_point(&pt1)) {
-              continue;
-            }
-            if (capacity < (len + 1)) {
-              capacity += 1024;
-              pts = (jcv_point*)realloc(pts, sizeof(jcv_point) * capacity);
-            }
-
-            pts[len].x = pt1.x;
-            pts[len].y = pt1.y;
-            ++len;
-            p = r;
-          } else {
-            fprintf(stderr, "Failed to read point on line %u\n", len);
-            return 1;
-          }
-        } else {
-          bufferoffset = (uint32_t)(uintptr_t)(r - p);
-          memmove(buffer, p, bufferoffset);
-          break;
-        }
-      }
-    }
-  }
-
-  printf("Read %d points from %s\n", len, path);
-
-  if (strcmp(path, "-") != 0) fclose(file);
-
-  *points = pts;
-  *length = len;
-
-  return 0;
-}
-
 // Remaps the point from the input space to image space
 inline jcv_point remap(const jcv_point* pt, const jcv_point* min,
                        const jcv_point* max, const jcv_point* scale) {
@@ -285,24 +141,54 @@ inline jcv_point remap(const jcv_point* pt, const jcv_point* min,
 }
 
 /**
- * @brief main functions from jc_voronoi/main.c
+ * @brief main functions to generate vonori diagram, sites and edges
  */
-void jcv_edge_generator(const int count, const int width, const int height,
-                        const int numrelaxations, jcv_point* points,
-                        jcv_rect* rect, const char* outputfile) {
-  int mode = 0;
-
-  printf("Width/Height is %d, %d\n", width, height);
-  printf("Count is %d, num relaxations is %d\n", count, numrelaxations);
-
+const jcv_edge* jcv_edge_generator(const int count, const int width,
+                                   const int height, int numrelaxations,
+                                   jcv_point* points, jcv_rect* rect,
+                                   const char* outputfile) {
   for (int i = 0; i < numrelaxations; ++i) {
     jcv_diagram diagram;
     memset(&diagram, 0, sizeof(jcv_diagram));
     jcv_diagram_generate(count, (const jcv_point*)points, rect, &diagram);
+
     relax_points(&diagram, points);
+
     jcv_diagram_free(&diagram);
   }
 
+  jcv_point dimensions;
+  dimensions.x = (jcv_real)width;
+  dimensions.y = (jcv_real)height;
+
+  jcv_diagram diagram;
+  memset(&diagram, 0, sizeof(jcv_diagram));
+  printf("Reach here\n");
+  jcv_diagram_generate(count, (const jcv_point*)points, rect, &diagram);
+
+  // generate sites
+  const jcv_site* sites = jcv_diagram_get_sites(&diagram);
+
+  // generate edges
+  const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
+
+  // generate image
+  if (outputfile)
+    jcv_image_generator(count, width, height, points, &diagram, sites, edge,
+                        outputfile);
+
+  jcv_diagram_free(&diagram);
+
+  return edge;
+}
+
+/**
+ * @brief generate image
+ */
+void jcv_image_generator(const int count, const int width, const int height,
+                         jcv_point* points, const jcv_diagram* diagram,
+                         const jcv_site* sites, const jcv_edge* edge,
+                         const char* outputfile) {
   size_t imagesize = (size_t)(width * height * 3);
   unsigned char* image = (unsigned char*)malloc(imagesize);
   memset(image, 0, imagesize);
@@ -310,18 +196,13 @@ void jcv_edge_generator(const int count, const int width, const int height,
   unsigned char color_pt[] = {255, 255, 255};
   unsigned char color_line[] = {220, 220, 220};
 
-  jcv_diagram diagram;
   jcv_point dimensions;
   dimensions.x = (jcv_real)width;
   dimensions.y = (jcv_real)height;
   {
-    memset(&diagram, 0, sizeof(jcv_diagram));
-    jcv_diagram_generate(count, (const jcv_point*)points, rect, &diagram);
-
     // If you want to draw triangles, or relax the diagram,
     // you can iterate over the sites and get all edges easily
-    const jcv_site* sites = jcv_diagram_get_sites(&diagram);
-    for (int i = 0; i < diagram.numsites; ++i) {
+    for (int i = 0; i < diagram->numsites; ++i) {
       const jcv_site* site = &sites[i];
 
       srand((unsigned int)
@@ -333,14 +214,14 @@ void jcv_edge_generator(const int count, const int width, const int height,
       color_tri[1] = basecolor + (unsigned char)(rand() % (235 - basecolor));
       color_tri[2] = basecolor + (unsigned char)(rand() % (235 - basecolor));
 
-      jcv_point s = remap(&site->p, &diagram.min, &diagram.max, &dimensions);
+      jcv_point s = remap(&site->p, &diagram->min, &diagram->max, &dimensions);
 
       const jcv_graphedge* e = site->edges;
       while (e) {
         jcv_point p0 =
-            remap(&e->pos[0], &diagram.min, &diagram.max, &dimensions);
+            remap(&e->pos[0], &diagram->min, &diagram->max, &dimensions);
         jcv_point p1 =
-            remap(&e->pos[1], &diagram.min, &diagram.max, &dimensions);
+            remap(&e->pos[1], &diagram->min, &diagram->max, &dimensions);
 
         draw_triangle(&s, &p0, &p1, image, width, height, 3, color_tri);
         e = e->next;
@@ -348,23 +229,20 @@ void jcv_edge_generator(const int count, const int width, const int height,
     }
 
     // If all you need are the edges
-    const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
     while (edge) {
       jcv_point p0 =
-          remap(&edge->pos[0], &diagram.min, &diagram.max, &dimensions);
+          remap(&edge->pos[0], &diagram->min, &diagram->max, &dimensions);
       jcv_point p1 =
-          remap(&edge->pos[1], &diagram.min, &diagram.max, &dimensions);
+          remap(&edge->pos[1], &diagram->min, &diagram->max, &dimensions);
       draw_line((int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, image, width,
                 height, 3, color_line);
       edge = jcv_diagram_get_next_edge(edge);
     }
-
-    jcv_diagram_free(&diagram);
   }
 
   // Plot the sites
   for (int i = 0; i < count; ++i) {
-    jcv_point p = remap(&points[i], &diagram.min, &diagram.max, &dimensions);
+    jcv_point p = remap(&points[i], &diagram->min, &diagram->max, &dimensions);
     plot((int)p.x, (int)p.y, image, width, height, 3, color_pt);
   }
 
@@ -384,4 +262,5 @@ void jcv_edge_generator(const int count, const int width, const int height,
   printf("wrote %s\n", path);
 
   free(image);
+  free(row);
 }

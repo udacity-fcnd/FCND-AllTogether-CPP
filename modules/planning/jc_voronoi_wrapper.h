@@ -28,27 +28,20 @@ int max2(int a, int b);
 int min3(int a, int b, int c);
 int max3(int a, int b, int c);
 
-// Search for any of the common characters: \n,;
-int is_csv(const char* chars, uint32_t len);
-
-int debug_skip_point(const jcv_point* pt);
-
-int read_input(const char* path, jcv_point** points, uint32_t* length,
-               jcv_rect** rect);
-
 void relax_points(const jcv_diagram* diagram, jcv_point* points);
 
 jcv_point remap(const jcv_point* pt, const jcv_point* min, const jcv_point* max,
                 const jcv_point* scale);
 
-//
-// void convert_vpoint_to_jcvpoint();
+const jcv_edge* jcv_edge_generator(const int count, const int width,
+                                   const int height, int numrelaxations,
+                                   jcv_point* points, jcv_rect* rect,
+                                   const char* outputfile);
 
-void jcv_edge_generator(const int count, const int width, const int height,
-                        const int numrelaxations, jcv_point* points,
-                        jcv_rect* rect, const char* outputfile);
-
-// void convert_jcvedge_to_vedge();
+void jcv_image_generator(const int count, const int width, const int height,
+                         jcv_point* points, const jcv_diagram* diagram,
+                         const jcv_site* sites, const jcv_edge* edge,
+                         const char* outputfile);
 
 #ifdef __cplusplus
 }
