@@ -30,3 +30,14 @@
 *.exe
 *.out
 *.app
+
+# vscode
+.vscode
+
+# build
+build
+
+# Bazel build
+bazel-*
+
+third_party/voronoi/jc_voronoi/**

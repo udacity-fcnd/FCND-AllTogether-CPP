@@ -1,9 +1,9 @@
 #pragma once
 
+#include <vector>
+#include "modules/common/VehicleDatatypes.h"
 #include "modules/math/Quaternion.h"
 #include "modules/utility/FixedQueue.h"
-#include "modules/common/VehicleDatatypes.h"
-#include <vector>
 
 using namespace SLR;
 
@@ -22,9 +22,12 @@ public:
   TrajectoryPoint NextTrajectoryPoint(float time);
   void WriteTrajectoryPointToFile(FILE* f, TrajectoryPoint traj_pt);
 
-  vector<TrajectoryPoint> traj; // vector containing the trajectory points
+  vector<TrajectoryPoint> traj;  // vector containing the trajectory points
 
-  int GetCurTrajectoryPoint() const { return _curTrajPoint; }
+  int GetCurTrajectoryPoint() const {
+    return _curTrajPoint;
+  }
+
 private:
   string _log_filename;
   FILE* _log_file;
