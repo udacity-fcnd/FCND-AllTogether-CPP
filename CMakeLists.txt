@@ -30,30 +30,34 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 # include_directories(third_party)
 
 FILE(GLOB SOURCES
-        modules/*.cpp
-        modules/common/*.cpp 
-        modules/control/*.cpp 
-        modules/drawing/*.cpp
-        modules/estimation/*.cpp 
-        modules/math/*.cpp
-        modules/mavlinkNode/*.cpp 
-        modules/planning/*.cpp 
-        modules/simulation/*.cpp 
-        modules/utility/*.cpp)
+      modules/*.cpp
+      modules/common/*.cpp 
+      modules/control/*.cpp 
+      modules/drawing/*.cpp
+      modules/estimation/*.cpp 
+      modules/math/*.cpp
+      modules/mavlinkNode/*.cpp 
+      modules/planning/*.cpp 
+      modules/planning/*.c
+      modules/simulation/*.cpp 
+      modules/utility/*.cpp
+      third_party/voronoi/jc_voronoi/src/stb_wrapper.c)
 
 FILE(GLOB HEADERS
-        modules/common/*.h
-        modules/control/*.h 
-        modules/drawing/*.h
-        modules/estimation/*.h 
-        modules/math/*.h
-        modules/mavlinkNode/*.h
-        modules/planning/*.h
-        modules/simulation/*.h
-        modules/utility/*.h
-        third_party/matrix/*.hpp
-        third_party/mavlink/*.h
-        third_party/mavlink/common/*.h)
+      modules/common/*.h
+      modules/control/*.h 
+      modules/drawing/*.h
+      modules/estimation/*.h 
+      modules/math/*.h
+      modules/mavlinkNode/*.h
+      modules/planning/*.h
+      modules/simulation/*.h
+      modules/utility/*.h
+      third_party/matrix/*.hpp
+      third_party/mavlink/*.h
+      third_party/mavlink/common/*.h
+      third_party/voronoi/jc_voronoi/src/jc_voronoi.h
+      third_party/voronoi/jc_voronoi/src/stb_image_write.h)
 
 # executable
 add_executable(FCNDSim
@@ -72,14 +76,24 @@ target_link_libraries(FCNDSim
 # test astar planner
 enable_testing()
 FILE(GLOB test_astar
-        modules/planning/unittest_AstarPlanner.cpp
-        modules/common/*.h
-        modules/math/*.cpp
-        modules/math/*.h
-        modules/utility/*.cpp
-        modules/utility/*.h
-        modules/planning/*.cpp
-        modules/planning/*.h)
+      modules/test/unittest_AstarPlanner.cpp
+      modules/planning/AstarPlanner.cpp
+      modules/planning/BaseQuadPlanner.cpp
+      modules/planning/Trajectory.cpp
+      modules/planning/jc_voronoi_wrapper.c
+      modules/planning/AstarPlanner.h
+      modules/planning/BaseQuadPlanner.h
+      modules/planning/DataType.h
+      modules/planning/jc_voronoi_wrapper.h
+      modules/planning/Trajectory.h
+      third_party/voronoi/jc_voronoi/src/stb_wrapper.c
+      third_party/voronoi/jc_voronoi/src/jc_voronoi.h
+      third_party/voronoi/jc_voronoi/src/stb_image_write.h
+      modules/common/*.h
+      modules/math/*.cpp
+      modules/math/*.h
+      modules/utility/*.cpp
+      modules/utility/*.h)
 add_executable(test_astar 
         ${test_astar})
 target_link_libraries(test_astar 
@@ -88,12 +102,12 @@ target_link_libraries(test_astar
 
 # test voronoi diagram
 set(test_voronoi
-    modules/planning/unittest_jc_voronoi.cpp
-    modules/planning/jc_voronoi_wrapper.c
-    modules/planning/jc_voronoi_wrapper.h
-    third_party/voronoi/jc_voronoi/src/stb_wrapper.c
-    third_party/voronoi/jc_voronoi/src/jc_voronoi.h
-    third_party/voronoi/jc_voronoi/src/stb_image_write.h )
+      modules/test/unittest_jc_voronoi.cpp
+      modules/planning/jc_voronoi_wrapper.c
+      modules/planning/jc_voronoi_wrapper.h
+      third_party/voronoi/jc_voronoi/src/stb_wrapper.c
+      third_party/voronoi/jc_voronoi/src/jc_voronoi.h
+      third_party/voronoi/jc_voronoi/src/stb_image_write.h )
 add_executable(test_voronoi 
     ${test_voronoi})
 target_link_libraries(test_voronoi m)
