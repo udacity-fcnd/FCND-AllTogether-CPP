@@ -44,38 +44,17 @@ public:
   Graph create_graph_from_map(const vector<Collider>& data,
                               const double altitude);
 
-  /** class AstarPlanner
-   * @brief create Voronoi graph edges given obstacle data
-   */
-  jcv_point convert_vpoint_to_jcvpoint(const Point& p) {
-    jcv_point jcv_p;
-    jcv_p.x = (float)p.lat;
-    jcv_p.y = (float)p.lon;
-    return jcv_p;
-  }
-  Point convert_jcvpoint_to_vpoint(const jcv_point& p) {
-    Point v_p;
-    v_p.lat = (double)p.x;
-    v_p.lon = (double)p.y;
-    return v_p;
-  }
-  Edge convert_jcvedge_to_vedge(const jcv_edge* edges) {
-    jcv_point p_start = edges->pos[0];
-    jcv_point p_end = edges->pos[1];
-    Point a = convert_jcvpoint_to_vpoint(p_start);
-    Point b = convert_jcvpoint_to_vpoint(p_end);
-    double dist = a.dist(b);
-    return Edge(a, b, dist);
-  }
-  vector<Edge> Voronoi(const vector<Point>& points, const int width,
-                       const int height);
-
   // Astar search
   void Astar_Graph();
 
 private:
   Point home;
   double safety_distance{5.0};
+  /** class AstarPlanner
+   * @brief create Voronoi graph edges given obstacle data
+   */
+  vector<Edge> Voronoi(const vector<Point>& points, const int width,
+                       const int height);
 };
 
 }  // namespace planning

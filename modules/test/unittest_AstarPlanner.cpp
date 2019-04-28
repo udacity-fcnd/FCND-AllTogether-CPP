@@ -107,10 +107,24 @@ int main() {
   test_read_collider(home.lat, 37.792480);
   test_read_collider(home.lon, -122.397450);
 
+  int subset_size = colliders.size();
+
+  vector<Collider> colliders_subset(colliders.begin(),
+                                    colliders.begin() + subset_size);
+
+  // for(const auto& c : colliders_subset)
+  //   cout << c.posX << ' '<< c.posY  << ' ' << c.posZ << ' '
+  //        << c.halfSizeX << ' ' << c.halfSizeY << ' ' << c.halfSizeZ << endl;
+
   // test Astar planner
   AstarPlanner test;
   test.set_home(home);
-  Grid grid = test.create_grid_from_map(colliders, 10.0);
+  Grid grid = test.create_grid_from_map(colliders_subset, 10.0);
+
   cout << "Grid size: x=" << grid.size_x << " y=" << grid.size_y << endl;
+
+  Graph graph = test.create_graph_from_map(colliders_subset, 10.0);
+
+  cout << "Graph Vertex NO: " << graph.getVertex() << endl;
   return 0;
 }

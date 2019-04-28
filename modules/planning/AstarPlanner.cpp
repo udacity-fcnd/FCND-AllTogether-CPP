@@ -1,6 +1,7 @@
 #include <climits>
 #include <queue>
 #include <string>
+#include <iostream>
 
 #include "modules/planning/DataType.h"
 #include "modules/planning/jc_voronoi_wrapper.h"
@@ -94,45 +95,42 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
 
   // populate grid with obstacles
   for (unsigned int i = 0; i < data.size(); ++i) {
-    points.emplace_back(data[i].posX - grid_x_start,
-                        data[i].posY - grid_y_start, 0.0);
+    points[i].lat = data[i].posX - grid_x_start;
+    points[i].lon = data[i].posY - grid_y_start;
   }
 
   vector<Edge> edges = Voronoi(points, size_x, size_y);
-  if (edges.size() <= 0)
+  if (edges.size() <= 0) {
+    std::cout << "AstartPlanner::Invalid Voronoi Edge Generated!\n";
     throw "planning::AstartPlanner: Incorrect Size of Edges in Voronoi Graph";
+  }
 
   Graph graph;
+  for (const auto& e : edges) {
+    graph.addEdge(e);
+  }
+  graph.setVertex();
 
   return graph;
 }
 
 vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
                                    const int width, const int height) {
-  int count = vpoints.size();
-  int numrelaxations = 0;
-
+  int numpoints = vpoints.size();
   jcv_point* jcv_points = 0;
-  jcv_rect* rect = 0;
-  jcv_points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)count);
-
-  const char* outputfile = NULL;  //"example.png";
+  jcv_points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)numpoints);
+  const char* outputfile = "Voronoi_Diagram.png";
 
   // convert_vpoint_to_jcvpoint()
-  for (unsigned int i = 0; i < vpoints.size(); ++i) {
+  for (unsigned int i = 0; i < numpoints; ++i) {
     jcv_points[i] = convert_vpoint_to_jcvpoint(vpoints[i]);
+    assert(jcv_points[i].x > 0 && jcv_points[i].x < width);
+    assert(jcv_points[i].y > 0 && jcv_points[i].y < height);
   }
 
-  const jcv_edge* jcv_edges = jcv_edge_generator(
-      count, width, height, numrelaxations, jcv_points, rect, outputfile);
-
-  // convert_jcvedge_to_vedge();
-  vector<Edge> edges;
-  while (jcv_edges) {
-    Edge e = convert_jcvedge_to_vedge(jcv_edges);
-    edges.push_back(e);
-    jcv_diagram_get_next_edge(jcv_edges);
-  }
+  std::cout << "Calling Voronoi and Building Graph...\n";
+  vector<Edge> edges =
+      jcv_edge_generator(numpoints, jcv_points, width, height, outputfile);
 
   free(jcv_points);
 

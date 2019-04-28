@@ -38,7 +38,6 @@ FILE(GLOB SOURCES
       modules/math/*.cpp
       modules/mavlinkNode/*.cpp 
       modules/planning/*.cpp 
-      modules/planning/*.c
       modules/simulation/*.cpp 
       modules/utility/*.cpp
       third_party/voronoi/jc_voronoi/src/stb_wrapper.c)
@@ -80,7 +79,7 @@ FILE(GLOB test_astar
       modules/planning/AstarPlanner.cpp
       modules/planning/BaseQuadPlanner.cpp
       modules/planning/Trajectory.cpp
-      modules/planning/jc_voronoi_wrapper.c
+      modules/planning/jc_voronoi_wrapper.cpp
       modules/planning/AstarPlanner.h
       modules/planning/BaseQuadPlanner.h
       modules/planning/DataType.h
@@ -103,7 +102,7 @@ target_link_libraries(test_astar
 # test voronoi diagram
 set(test_voronoi
       modules/test/unittest_jc_voronoi.cpp
-      modules/planning/jc_voronoi_wrapper.c
+      modules/planning/jc_voronoi_wrapper.cpp
       modules/planning/jc_voronoi_wrapper.h
       third_party/voronoi/jc_voronoi/src/stb_wrapper.c
       third_party/voronoi/jc_voronoi/src/jc_voronoi.h

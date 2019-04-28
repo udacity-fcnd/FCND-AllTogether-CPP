@@ -1,15 +1,6 @@
-/*
- * A simple test program to display the output of the voronoi generator
-
-VERSION
-    0.2     2017-04-16  - Added support for reading .csv files
-    0.1                 - Initial version
-
- */
-
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdint>
+#include <cstdio>
 
 #define JC_VORONOI_IMPLEMENTATION
 // If you wish to use doubles
@@ -18,6 +9,8 @@ VERSION
 // #define JCV_ATAN2 atan2
 
 #include "modules/planning/jc_voronoi_wrapper.h"
+
+namespace planning {
 
 /**
  * @brief helper functions from jc_voronoi/main.c
@@ -140,55 +133,72 @@ inline jcv_point remap(const jcv_point* pt, const jcv_point* min,
   return p;
 }
 
+jcv_point convert_vpoint_to_jcvpoint(const Point& p) {
+  jcv_point jcv_p;
+  jcv_p.x = (float)p.lat;
+  jcv_p.y = (float)p.lon;
+  return jcv_p;
+}
+
+Point convert_jcvpoint_to_vpoint(const jcv_point& p) {
+  Point v_p;
+  v_p.lat = (double)p.x;
+  v_p.lon = (double)p.y;
+  return v_p;
+}
+
 /**
  * @brief main functions to generate vonori diagram, sites and edges
  */
-const jcv_edge* jcv_edge_generator(const int count, const int width,
-                                   const int height, int numrelaxations,
-                                   jcv_point* points, jcv_rect* rect,
-                                   const char* outputfile) {
-  for (int i = 0; i < numrelaxations; ++i) {
-    jcv_diagram diagram;
-    memset(&diagram, 0, sizeof(jcv_diagram));
-    jcv_diagram_generate(count, (const jcv_point*)points, rect, &diagram);
+vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
+                                const int width, const int height,
+                                const char* outputfile) {
+  jcv_diagram diagram;
+  memset(&diagram, 0, sizeof(jcv_diagram));
 
-    relax_points(&diagram, points);
+  printf("Generating Voronoi Diagram...\n");
+  jcv_diagram_generate(numpoints, (const jcv_point*)points, 0, &diagram);
 
-    jcv_diagram_free(&diagram);
-  }
+  // generate edges
+  printf("Generating Voronoi Edges...\n");
+  vector<Edge> edges;
 
   jcv_point dimensions;
   dimensions.x = (jcv_real)width;
   dimensions.y = (jcv_real)height;
-
-  jcv_diagram diagram;
-  memset(&diagram, 0, sizeof(jcv_diagram));
-  printf("Reach here\n");
-  jcv_diagram_generate(count, (const jcv_point*)points, rect, &diagram);
-
-  // generate sites
-  const jcv_site* sites = jcv_diagram_get_sites(&diagram);
-
-  // generate edges
   const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
+  while (edge) {
+    // Remaps the point from the input space to image space
+    jcv_point p0 =
+        remap(&edge->pos[0], &diagram.min, &diagram.max, &dimensions);
+    jcv_point p1 =
+        remap(&edge->pos[1], &diagram.min, &diagram.max, &dimensions);
+
+    // convert back to Vpoint and Vedge
+    Point a = convert_jcvpoint_to_vpoint(p0);
+    Point b = convert_jcvpoint_to_vpoint(p1);
+    edges.emplace_back(a, b, a.dist(b));
+
+    edge = jcv_diagram_get_next_edge(edge);
+  }
 
   // generate image
-  if (outputfile)
-    jcv_image_generator(count, width, height, points, &diagram, sites, edge,
-                        outputfile);
+  if (outputfile) {
+    printf("Generating Images ...\n");
+    jcv_image_generator(numpoints, points, width, height, &diagram, outputfile);
+  }
 
   jcv_diagram_free(&diagram);
 
-  return edge;
+  return edges;
 }
 
 /**
  * @brief generate image
  */
-void jcv_image_generator(const int count, const int width, const int height,
-                         jcv_point* points, const jcv_diagram* diagram,
-                         const jcv_site* sites, const jcv_edge* edge,
-                         const char* outputfile) {
+void jcv_image_generator(const int count, const jcv_point* points,
+                         const int width, const int height,
+                         const jcv_diagram* diagram, const char* outputfile) {
   size_t imagesize = (size_t)(width * height * 3);
   unsigned char* image = (unsigned char*)malloc(imagesize);
   memset(image, 0, imagesize);
@@ -199,44 +209,33 @@ void jcv_image_generator(const int count, const int width, const int height,
   jcv_point dimensions;
   dimensions.x = (jcv_real)width;
   dimensions.y = (jcv_real)height;
-  {
-    // If you want to draw triangles, or relax the diagram,
-    // you can iterate over the sites and get all edges easily
-    for (int i = 0; i < diagram->numsites; ++i) {
-      const jcv_site* site = &sites[i];
 
-      srand((unsigned int)
-                site->index);  // for generating colors for the triangles
+  // If you want to draw triangles, or relax the diagram,
+  // you can iterate over the sites and get all edges easily
+  // generate sites
+  const jcv_site* sites = jcv_diagram_get_sites(diagram);
+  for (int i = 0; i < diagram->numsites; ++i) {
+    const jcv_site* site = &sites[i];
 
-      unsigned char color_tri[3];
-      unsigned char basecolor = 120;
-      color_tri[0] = basecolor + (unsigned char)(rand() % (235 - basecolor));
-      color_tri[1] = basecolor + (unsigned char)(rand() % (235 - basecolor));
-      color_tri[2] = basecolor + (unsigned char)(rand() % (235 - basecolor));
+    srand((unsigned int)site->index);  // generating colors for the triangles
 
-      jcv_point s = remap(&site->p, &diagram->min, &diagram->max, &dimensions);
+    unsigned char color_tri[3];
+    unsigned char basecolor = 120;
+    color_tri[0] = basecolor + (unsigned char)(rand() % (235 - basecolor));
+    color_tri[1] = basecolor + (unsigned char)(rand() % (235 - basecolor));
+    color_tri[2] = basecolor + (unsigned char)(rand() % (235 - basecolor));
 
-      const jcv_graphedge* e = site->edges;
-      while (e) {
-        jcv_point p0 =
-            remap(&e->pos[0], &diagram->min, &diagram->max, &dimensions);
-        jcv_point p1 =
-            remap(&e->pos[1], &diagram->min, &diagram->max, &dimensions);
+    jcv_point s = remap(&site->p, &diagram->min, &diagram->max, &dimensions);
 
-        draw_triangle(&s, &p0, &p1, image, width, height, 3, color_tri);
-        e = e->next;
-      }
-    }
-
-    // If all you need are the edges
-    while (edge) {
+    const jcv_graphedge* e = site->edges;
+    while (e) {
       jcv_point p0 =
-          remap(&edge->pos[0], &diagram->min, &diagram->max, &dimensions);
+          remap(&e->pos[0], &diagram->min, &diagram->max, &dimensions);
       jcv_point p1 =
-          remap(&edge->pos[1], &diagram->min, &diagram->max, &dimensions);
-      draw_line((int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, image, width,
-                height, 3, color_line);
-      edge = jcv_diagram_get_next_edge(edge);
+          remap(&e->pos[1], &diagram->min, &diagram->max, &dimensions);
+
+      draw_triangle(&s, &p0, &p1, image, width, height, 3, color_tri);
+      e = e->next;
     }
   }
 
@@ -264,3 +263,4 @@ void jcv_image_generator(const int count, const int width, const int height,
   free(image);
   free(row);
 }
+}  // namespace planning

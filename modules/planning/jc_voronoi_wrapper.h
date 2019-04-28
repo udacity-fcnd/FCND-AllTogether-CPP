@@ -3,15 +3,23 @@
 
 #include <stdint.h>
 #include "third_party/voronoi/jc_voronoi/src/jc_voronoi.h"
+#include "modules/planning/DataType.h"
+#include <vector>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-// I wrapped it in a library because it spams too many warnings
+// wrap it in a library to avoid too many warnings
 extern int wrap_stbi_write_png(char const* filename, int w, int h, int comp,
                                const void* data, int stride_in_bytes);
+#ifdef __cplusplus
+}
+#endif
 
+namespace planning {
+/**
+ * @brief plotting functions
+ */
 void plot(int x, int y, unsigned char* image, int width, int height,
           int nchannels, unsigned char* color);
 
@@ -33,17 +41,16 @@ void relax_points(const jcv_diagram* diagram, jcv_point* points);
 jcv_point remap(const jcv_point* pt, const jcv_point* min, const jcv_point* max,
                 const jcv_point* scale);
 
-const jcv_edge* jcv_edge_generator(const int count, const int width,
-                                   const int height, int numrelaxations,
-                                   jcv_point* points, jcv_rect* rect,
-                                   const char* outputfile);
+jcv_point convert_vpoint_to_jcvpoint(const Point& p);
+Point convert_jcvpoint_to_vpoint(const jcv_point& p);
 
-void jcv_image_generator(const int count, const int width, const int height,
-                         jcv_point* points, const jcv_diagram* diagram,
-                         const jcv_site* sites, const jcv_edge* edge,
-                         const char* outputfile);
+vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
+                                const int width, const int height,
+                                const char* outputfile);
 
-#ifdef __cplusplus
-}
-#endif
+void jcv_image_generator(const int count, const jcv_point* points,
+                         const int width, const int height,
+                         const jcv_diagram* diagram, const char* outputfile);
+
+}  // namespace planning
 #endif  // JC_VORONOI_WRAPPER_

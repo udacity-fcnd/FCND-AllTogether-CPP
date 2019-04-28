@@ -48,6 +48,17 @@ struct Point {
                 pow(alt - other.lat, 2));
   }
 
+  bool isValid(double lat_min, double lat_max,
+               double lon_min, double lon_max, 
+               double alt_min, double alt_max){
+    if(lat < lat_min || lat > lat_max ||
+       lon < lon_min || lon > lon_max ||
+       alt < alt_min || alt > alt_max )
+       return false;
+    else
+        return true;
+  }
+
   bool operator==(const Point& other) const {
     return abs(lat - other.lat) < EPS && abs(lon - other.lon) < EPS &&
            abs(alt - other.alt) < EPS;
@@ -79,6 +90,16 @@ struct Edge {
   Point next;
   double weight;
   Edge(Point& u, Point& v, double cost) : start(u), next(v), weight(cost) {}
+  
+  bool isValid(double lat_min, double lat_max,
+               double lon_min, double lon_max, 
+               double alt_min, double alt_max) {
+      if(start.isValid(lat_min, lat_max, lon_min, lon_max, alt_min, alt_max) && 
+         next.isValid(lat_min, lat_max, lon_min, lon_max, alt_min, alt_max) )
+        return true;
+      else
+        return false;
+  }
 };
 
 // When using std::unordered_map<T>, we need to have std::hash<T> or
@@ -98,13 +119,19 @@ public:
   Graph() = default;
   Graph(int V);  // Constructor
 
-  void countVertex() {
+  void setVertex() {
     V = edges.size();
   }
 
-  void addEdge(Point& u, Point& v, double cost);
+  int getVertex() const{
+    return V;
+  }
 
-  void addEdge(Edge& e);
+  void addEdge(const Point& u, const Point& v, const double cost);
+
+  void addEdge(const Edge& e){
+    edges[e.start].emplace_back(e.next, e.weight);
+  }
 
   vector<std::pair<Point, double>> neighbors(const Point& u) {
     return edges[u];
