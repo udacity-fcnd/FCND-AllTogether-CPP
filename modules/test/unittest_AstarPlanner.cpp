@@ -112,10 +112,6 @@ int main() {
   vector<Collider> colliders_subset(colliders.begin(),
                                     colliders.begin() + subset_size);
 
-  // for(const auto& c : colliders_subset)
-  //   cout << c.posX << ' '<< c.posY  << ' ' << c.posZ << ' '
-  //        << c.halfSizeX << ' ' << c.halfSizeY << ' ' << c.halfSizeZ << endl;
-
   // test Astar planner
   AstarPlanner test;
   test.set_home(home);

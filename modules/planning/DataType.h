@@ -16,21 +16,14 @@ typedef V3F Point;
  *
  */
 struct Collider {
-  float posX = 0.0;       // center north
-  float posY = 0.0;       // center east
-  float posZ = 0.0;       // center altitude
-  float halfSizeX = 0.0;  // half size north
-  float halfSizeY = 0.0;  // half size east
-  float halfSizeZ = 0.0;  // half size altitude
+  Point pos;
+  Point halfSize;
 
   Collider() = default;
-  Collider(float x, float y, float z, float hx, float hy, float hz)
-      : posX(x),
-        posY(y),
-        posZ(z),
-        halfSizeX(hx),
-        halfSizeY(hy),
-        halfSizeZ(hz) {}
+  Collider(float x, float y, float z, float hx, float hy, float hz) {
+    pos = Point(x, y, z);
+    halfSize = Point(hx, hy, hz);
+  }
 };
 
 /** struct Grid
