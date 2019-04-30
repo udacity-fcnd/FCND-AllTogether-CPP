@@ -12,7 +12,7 @@ using std::vector;
 namespace planning {
 
 Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
-                                        const double altitude) {
+                                        const float altitude) {
   // find min and max coordinates in north and east directions
   int grid_x_start = INT_MAX, grid_x_end = INT_MIN;
   int grid_y_start = INT_MAX, grid_y_end = INT_MIN;  // grid corner positions
@@ -65,7 +65,7 @@ Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
 }
 
 Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
-                                          const double altitude) {
+                                          const float altitude) {
   // find min and max coordinates in north and east directions
   int grid_x_start = INT_MAX, grid_x_end = INT_MIN;
   int grid_y_start = INT_MAX, grid_y_end = INT_MIN;  // grid corner positions
@@ -95,8 +95,8 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
 
   // populate grid with obstacles
   for (unsigned int i = 0; i < data.size(); ++i) {
-    points[i].lat = data[i].posX - grid_x_start;
-    points[i].lon = data[i].posY - grid_y_start;
+    points[i].x = data[i].posX - grid_x_start;
+    points[i].y = data[i].posY - grid_y_start;
   }
 
   vector<Edge> edges = Voronoi(points, size_x, size_y);

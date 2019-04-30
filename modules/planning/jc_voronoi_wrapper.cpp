@@ -135,15 +135,15 @@ inline jcv_point remap(const jcv_point* pt, const jcv_point* min,
 
 jcv_point convert_vpoint_to_jcvpoint(const Point& p) {
   jcv_point jcv_p;
-  jcv_p.x = (float)p.lat;
-  jcv_p.y = (float)p.lon;
+  jcv_p.x = p.x;
+  jcv_p.y = p.y;
   return jcv_p;
 }
 
 Point convert_jcvpoint_to_vpoint(const jcv_point& p) {
   Point v_p;
-  v_p.lat = (double)p.x;
-  v_p.lon = (double)p.y;
+  v_p.x = p.x;
+  v_p.y = p.y;
   return v_p;
 }
 
@@ -177,7 +177,7 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
     // convert back to Vpoint and Vedge
     Point a = convert_jcvpoint_to_vpoint(p0);
     Point b = convert_jcvpoint_to_vpoint(p1);
-    edges.emplace_back(a, b, a.dist(b));
+    edges.emplace_back(a, b, a.distXY(b));
 
     edge = jcv_diagram_get_next_edge(edge);
   }

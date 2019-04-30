@@ -31,7 +31,7 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
    * read and set home position
    */
   getline(fin, line);
-  double lat0, lon0;
+  float lat0, lon0;
   std::replace(line.begin(), line.end(), ',', ' ');
   stringstream ss(line);
   while (!ss.eof()) {
@@ -45,8 +45,8 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
       throw std::runtime_error("AstartPlanner:Unrecognized variable name.");
     }
   }
-  home.lat = lat0;
-  home.lon = lon0;
+  home.x = lat0;
+  home.y = lon0;
 
   /**
    *  skip one line of names
@@ -56,7 +56,7 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
   /**
    * read and set collider position
    */
-  double posX, posY, posZ, halfSizeX, halfSizeY, halfSizeZ;
+  float posX, posY, posZ, halfSizeX, halfSizeY, halfSizeZ;
   while (getline(fin, line)) {
     stringstream ss(line);
     Collider collid;
@@ -89,7 +89,7 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
   return;
 }
 
-void test_read_collider(double sol, double truth) {
+void test_read_collider(float sol, float truth) {
   assert(abs(sol - truth) < eps);
 }
 
@@ -104,8 +104,8 @@ int main() {
   }
 
   // testing data reading
-  test_read_collider(home.lat, 37.792480);
-  test_read_collider(home.lon, -122.397450);
+  test_read_collider(home.x, 37.792480);
+  test_read_collider(home.y, -122.397450);
 
   int subset_size = colliders.size();
 
