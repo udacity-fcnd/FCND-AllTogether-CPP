@@ -34,8 +34,8 @@ Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
   }
 
   // grid size in north and east directions
-  size_t size_x = grid_x_end - grid_x_start;
-  size_t size_y = grid_y_end - grid_y_start;
+  int size_x = grid_x_end - grid_x_start;
+  int size_y = grid_y_end - grid_y_start;
 
   // initialize empty grid
   Grid grid(size_x, size_y, grid_x_start, grid_y_start);
@@ -53,10 +53,9 @@ Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
 
       pos_y_end = ceil(p.pos.y + p.halfSize.y + safety_distance) - grid_y_start;
 
-      for (unsigned int i = max(0, pos_x_start);
-           i <= (unsigned int)pos_x_end && i < grid.size_x; ++i)
-        for (unsigned int j = max(0, pos_y_start);
-             j <= (unsigned int)pos_y_end && j < grid.size_y; ++j)
+      for (int i = max(0, pos_x_start); i <= pos_x_end && i < grid.size_x; ++i)
+        for (int j = max(0, pos_y_start); j <= pos_y_end && j < grid.size_y;
+             ++j)
           grid.is_obstacle[i][j] = true;
     }
   }
@@ -87,14 +86,14 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
   }
 
   // grid size in north and east directions
-  size_t size_x = grid_x_end - grid_x_start;
-  size_t size_y = grid_y_end - grid_y_start;
+  int size_x = grid_x_end - grid_x_start;
+  int size_y = grid_y_end - grid_y_start;
 
   // initialize empty grid
   vector<Point> points(data.size());  // obstacle center positions
 
   // populate grid with obstacles
-  for (unsigned int i = 0; i < data.size(); ++i) {
+  for (size_t i = 0; i < data.size(); ++i) {
     points[i].x = data[i].pos.x - grid_x_start;
     points[i].y = data[i].pos.y - grid_y_start;
   }
@@ -116,13 +115,13 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
 
 vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
                                    const int width, const int height) {
-  int numpoints = vpoints.size();
+  size_t numpoints = vpoints.size();
   jcv_point* jcv_points = 0;
   jcv_points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)numpoints);
   const char* outputfile = "Voronoi_Diagram.png";
 
   // convert_vpoint_to_jcvpoint()
-  for (unsigned int i = 0; i < numpoints; ++i) {
+  for (size_t i = 0; i < numpoints; ++i) {
     jcv_points[i] = convert_vpoint_to_jcvpoint(vpoints[i]);
     assert(jcv_points[i].x > 0 && jcv_points[i].x < width);
     assert(jcv_points[i].y > 0 && jcv_points[i].y < height);
@@ -130,11 +129,39 @@ vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
 
   std::cout << "Calling Voronoi and Building Graph...\n";
   vector<Edge> edges =
-      jcv_edge_generator(numpoints, jcv_points, width, height, outputfile);
+      jcv_edge_generator((int)numpoints, jcv_points, width, height, outputfile);
 
   free(jcv_points);
 
   return edges;
 }
 
+void AstarPlanner::astar_graph_search(const Graph& graph, const Point& start, const Point& goal, 
+                          unordered_map<Point, Point, PointHash>& came_from, 
+                          unordered_map<Point, float, PointHash>& cost_so_far){
+  priority_queue<PointwCost, vector<PointwCost>, std::greater<PointwCost>> frontier;
+  frontier.emplace(start, 0.0);
+
+  came_from[start] = start;
+  cost_so_far[start] = 0.0;
+
+  while(!frontier.empty()){
+    auto current = frontier.top();
+    frontier.pop();
+
+    if(current.p == goal){
+      break;
+    }
+
+    for(auto& next : graph.neighbors(current.p)){
+      float new_cost = cost_so_far[current.p] + next.cost;
+      if(!cost_so_far.count(next.p) || new_cost < cost_so_far[next.p]){
+        cost_so_far[next.p] = new_cost;
+        float priority = new_cost + heuristic(next.p, goal);
+        frontier.emplace(next.p, priority);
+        came_from[next.p] = current.p;
+      }
+    }
+  }
+}
 }  // namespace planning

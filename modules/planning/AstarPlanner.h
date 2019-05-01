@@ -43,8 +43,17 @@ public:
   Graph create_graph_from_map(const vector<Collider>& data,
                               const float altitude);
 
-  // Astar search
-  void Astar_Graph();
+  // Astar search over graph
+  void astar_graph_search(const Graph& graph, const Point& start, const Point& goal, 
+                          unordered_map<Point, Point, PointHash>& came_from, 
+                          unordered_map<Point, float, PointHash>& cost_so_far);
+
+  /**
+   * @brief heuristic function for cost-to-go estimation
+   */
+  float heuristic(const Point& pos, const Point& goal) {
+    return pos.dist(goal);
+  }
 
 private:
   Point home;

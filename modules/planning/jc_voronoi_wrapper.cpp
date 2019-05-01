@@ -177,7 +177,7 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
     // convert back to Vpoint and Vedge
     Point a = convert_jcvpoint_to_vpoint(p0);
     Point b = convert_jcvpoint_to_vpoint(p1);
-    edges.emplace_back(a, b, a.distXY(b));
+    edges.emplace_back(a, b, a.dist(b));
 
     edge = jcv_diagram_get_next_edge(edge);
   }

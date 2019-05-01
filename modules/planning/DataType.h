@@ -12,8 +12,26 @@ using std::vector;
 namespace planning {
 
 typedef V3F Point;
-/**
- *
+
+/** struct PointwCost
+ * @brief point associated with cost
+ */
+struct PointwCost {
+  Point p;
+  float cost;
+  PointwCost(Point p_, float cost_) : p(p_), cost(cost_) {}
+
+  bool operator<(const PointwCost& other) const{
+    return cost < other.cost;
+  }
+
+  bool operator>(const PointwCost& other) const{
+    return cost > other.cost;
+  }
+};
+
+/** struct Collider
+ * @brief obstacle point with geometry
  */
 struct Collider {
   Point pos;
@@ -27,17 +45,17 @@ struct Collider {
 };
 
 /** struct Grid
- *
+ * @brief 2D representation of obstacle map
  */
 struct Grid {
-  size_t size_x;                     // grid size in north
-  size_t size_y;                     // grid size in east
+  int size_x;                        // grid size in north
+  int size_y;                        // grid size in east
   int x0;                            // grid starting(min) point in north
   int y0;                            // grid starting(min) point in east
   vector<vector<bool>> is_obstacle;  // is_obstacle[i][j] is true
                                      // if x0 + i and y0 + j is obstacle
 
-  Grid(size_t sx, size_t sy, int x_start = 0, int y_start = 0)
+  Grid(int sx, int sy, int x_start = 0, int y_start = 0)
       : size_x(sx), size_y(sy), x0(x_start), y0(y_start) {
     is_obstacle = vector<vector<bool>>(sx, vector<bool>(sy, false));
   }
@@ -60,11 +78,15 @@ public:
   std::size_t operator()(const Point& u) const {
     auto hash1 = std::hash<float>{}(u.x);
     auto hash2 = std::hash<float>{}(u.y);
+    auto hash3 = std::hash<float>{}(u.z);
 
-    return hash1 ^ hash2;
+    return hash1 ^ hash2 ^ hash3;
   }
 };
 
+/** class Graph
+ * @brief
+ */
 class Graph {
 public:
   Graph() = default;
@@ -78,20 +100,22 @@ public:
     return V;
   }
 
-  void addEdge(const Point& u, const Point& v, const float cost);
+  void addEdge(const Point& u, const Point& v, const float cost){
+    edges[u].emplace_back(v, u.dist(v));
+  }
 
   void addEdge(const Edge& e) {
     edges[e.start].emplace_back(e.next, e.weight);
   }
 
-  vector<std::pair<Point, float>> neighbors(const Point& u) {
-    return edges[u];
+  vector<PointwCost> neighbors(const Point& u) const {
+    return edges.at(u);
   }
 
 private:
   int V;  // NO. of vertices
 
-  unordered_map<Point, vector<std::pair<Point, float>>, PointHash> edges;
+  unordered_map<Point, vector<PointwCost>, PointHash> edges;
 };
 
 }  // namespace planning

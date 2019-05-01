@@ -31,7 +31,8 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
    * read and set home position
    */
   getline(fin, line);
-  float lat0, lon0;
+  float lat0 = 0.0;
+  float lon0 = 0.0;
   std::replace(line.begin(), line.end(), ',', ' ');
   stringstream ss(line);
   while (!ss.eof()) {
