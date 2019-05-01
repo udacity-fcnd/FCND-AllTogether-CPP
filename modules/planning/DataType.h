@@ -13,19 +13,30 @@ namespace planning {
 
 typedef V3F Point;
 
-/** struct PointwCost
- * @brief point associated with cost
- */
-struct PointwCost {
-  Point p;
+class PointwCost : public Point {
+public:
   float cost;
-  PointwCost(Point p_, float cost_) : p(p_), cost(cost_) {}
+  PointwCost() : cost(0.0) {
+    x = 0.0; y = 0.0; z = 0.0;
+  }
 
-  bool operator<(const PointwCost& other) const{
+  PointwCost(float x_, float y_, float z_, float cost_) : cost(cost_) {
+    x = x_; y = y_; z = z_;
+  }
+
+  PointwCost(const Point& p, float cost_) : cost(cost_) {
+    x = p.x; y = p.y; z = p.z;
+  }
+
+  Point get_pos() const {
+    return Point(x, y, z);
+  }
+
+  bool operator<(const PointwCost& other) const {
     return cost < other.cost;
   }
 
-  bool operator>(const PointwCost& other) const{
+  bool operator>(const PointwCost& other) const {
     return cost > other.cost;
   }
 };

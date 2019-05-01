@@ -146,20 +146,21 @@ void AstarPlanner::astar_graph_search(const Graph& graph, const Point& start, co
   cost_so_far[start] = 0.0;
 
   while(!frontier.empty()){
-    auto current = frontier.top();
+    auto current = frontier.top().get_pos();
     frontier.pop();
 
-    if(current.p == goal){
+    if(current == goal){
       break;
     }
 
-    for(auto& next : graph.neighbors(current.p)){
-      float new_cost = cost_so_far[current.p] + next.cost;
-      if(!cost_so_far.count(next.p) || new_cost < cost_so_far[next.p]){
-        cost_so_far[next.p] = new_cost;
-        float priority = new_cost + heuristic(next.p, goal);
-        frontier.emplace(next.p, priority);
-        came_from[next.p] = current.p;
+    for(auto& next : graph.neighbors(current)){
+      Point next_pos = next.get_pos();
+      float new_cost = cost_so_far[current] + next.cost;
+      if(!cost_so_far.count(next_pos) || new_cost < cost_so_far[next_pos]){
+        cost_so_far[next_pos] = new_cost;
+        float priority = new_cost + heuristic(next_pos, goal);
+        frontier.emplace(next_pos, priority);
+        came_from[next_pos] = current;
       }
     }
   }
