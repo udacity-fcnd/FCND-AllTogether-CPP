@@ -11,57 +11,57 @@ using std::vector;
 
 namespace planning {
 
-Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
-                                        const float altitude) {
-  // find min and max coordinates in north and east directions
-  int grid_x_start = INT_MAX, grid_x_end = INT_MIN;
-  int grid_y_start = INT_MAX, grid_y_end = INT_MIN;  // grid corner positions
-  int pos_x_start, pos_x_end;
-  int pos_y_start, pos_y_end;  // obstacle start and end positions
+// Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
+//                                         const float altitude) {
+//   // find min and max coordinates in north and east directions
+//   int grid_x_start = INT_MAX, grid_x_end = INT_MIN;
+//   int grid_y_start = INT_MAX, grid_y_end = INT_MIN;  // grid corner positions
+//   int pos_x_start, pos_x_end;
+//   int pos_y_start, pos_y_end;  // obstacle start and end positions
 
-  for (const auto& p : data) {
-    pos_x_start = floor(p.pos.x - p.halfSize.x);
-    grid_x_start = grid_x_start < pos_x_start ? grid_x_start : pos_x_start;
+//   for (const auto& p : data) {
+//     pos_x_start = floor(p.x - p.half_size_x);
+//     grid_x_start = grid_x_start < pos_x_start ? grid_x_start : pos_x_start;
 
-    pos_x_end = ceil(p.pos.x + p.halfSize.x);
-    grid_x_end = grid_x_end > pos_x_end ? grid_x_end : pos_x_end;
+//     pos_x_end = ceil(p.x + p.half_size_x);
+//     grid_x_end = grid_x_end > pos_x_end ? grid_x_end : pos_x_end;
 
-    pos_y_start = floor(p.pos.y - p.halfSize.y);
-    grid_y_start = grid_y_start < pos_y_start ? grid_y_start : pos_y_start;
+//     pos_y_start = floor(p.y - p.half_size_y);
+//     grid_y_start = grid_y_start < pos_y_start ? grid_y_start : pos_y_start;
 
-    pos_y_end = ceil(p.pos.y + p.halfSize.y);
-    grid_y_end = grid_y_end > pos_y_end ? grid_y_end : pos_y_end;
-  }
+//     pos_y_end = ceil(p.y + p.half_size_y);
+//     grid_y_end = grid_y_end > pos_y_end ? grid_y_end : pos_y_end;
+//   }
 
-  // grid size in north and east directions
-  int size_x = grid_x_end - grid_x_start;
-  int size_y = grid_y_end - grid_y_start;
+//   // grid size in north and east directions
+//   int size_x = grid_x_end - grid_x_start;
+//   int size_y = grid_y_end - grid_y_start;
 
-  // initialize empty grid
-  Grid grid(size_x, size_y, grid_x_start, grid_y_start);
+//   // initialize empty grid
+//   Grid grid(size_x, size_y, grid_x_start, grid_y_start);
 
-  // populate grid with obstacles
-  for (const auto& p : data) {
-    if (p.pos.z + p.halfSize.z + safety_distance > altitude) {
-      pos_x_start =
-          floor(p.pos.x - p.halfSize.x - safety_distance) - grid_x_start;
+//   // populate grid with obstacles
+//   for (const auto& p : data) {
+//     if (p.z + p.half_size_z + safety_distance > altitude) {
+//       pos_x_start =
+//           floor(p.x - p.half_size_x - safety_distance) - grid_x_start;
 
-      pos_x_end = ceil(p.pos.x + p.halfSize.x + safety_distance) - grid_x_start;
+//       pos_x_end = ceil(p.x + p.half_size_x + safety_distance) - grid_x_start;
 
-      pos_y_start =
-          floor(p.pos.y - p.halfSize.y - safety_distance) - grid_y_start;
+//       pos_y_start =
+//           floor(p.y - p.half_size_y - safety_distance) - grid_y_start;
 
-      pos_y_end = ceil(p.pos.y + p.halfSize.y + safety_distance) - grid_y_start;
+//       pos_y_end = ceil(p.y + p.half_size_y + safety_distance) - grid_y_start;
 
-      for (int i = max(0, pos_x_start); i <= pos_x_end && i < grid.size_x; ++i)
-        for (int j = max(0, pos_y_start); j <= pos_y_end && j < grid.size_y;
-             ++j)
-          grid.is_obstacle[i][j] = true;
-    }
-  }
+//       for (int i = max(0, pos_x_start); i <= pos_x_end && i < grid.size_x; ++i)
+//         for (int j = max(0, pos_y_start); j <= pos_y_end && j < grid.size_y;
+//              ++j)
+//           grid.is_obstacle[i][j] = true;
+//     }
+//   }
 
-  return grid;
-}
+//   return grid;
+// }
 
 Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
                                           const float altitude) {
@@ -72,16 +72,16 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
   int pos_y_start, pos_y_end;  // obstacle start and end positions
 
   for (const auto& p : data) {
-    pos_x_start = floor(p.pos.x - p.halfSize.x);
+    pos_x_start = floor(p.x - p.half_size_x);
     grid_x_start = grid_x_start < pos_x_start ? grid_x_start : pos_x_start;
 
-    pos_x_end = ceil(p.pos.x + p.halfSize.x);
+    pos_x_end = ceil(p.x + p.half_size_x);
     grid_x_end = grid_x_end > pos_x_end ? grid_x_end : pos_x_end;
 
-    pos_y_start = floor(p.pos.y - p.halfSize.y);
+    pos_y_start = floor(p.y - p.half_size_y);
     grid_y_start = grid_y_start < pos_y_start ? grid_y_start : pos_y_start;
 
-    pos_y_end = ceil(p.pos.y + p.halfSize.y);
+    pos_y_end = ceil(p.y + p.half_size_y);
     grid_y_end = grid_y_end > pos_y_end ? grid_y_end : pos_y_end;
   }
 
@@ -94,8 +94,8 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
 
   // populate grid with obstacles
   for (size_t i = 0; i < data.size(); ++i) {
-    points[i].x = data[i].pos.x - grid_x_start;
-    points[i].y = data[i].pos.y - grid_y_start;
+    points[i].x = data[i].x - grid_x_start;
+    points[i].y = data[i].y - grid_y_start;
   }
 
   vector<Edge> edges = Voronoi(points, size_x, size_y);

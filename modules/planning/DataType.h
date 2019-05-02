@@ -44,33 +44,45 @@ public:
 /** struct Collider
  * @brief obstacle point with geometry
  */
-struct Collider {
-  Point pos;
-  Point halfSize;
+class Collider : public Point {
+public: 
 
-  Collider() = default;
-  Collider(float x, float y, float z, float hx, float hy, float hz) {
-    pos = Point(x, y, z);
-    halfSize = Point(hx, hy, hz);
+  float half_size_x;
+  float half_size_y;
+  float half_size_z;
+
+  Collider(float hx, float hy, float hz) : 
+  half_size_x(hx), half_size_y(hy), half_size_z(hz) {
+    x = 0.0; y = 0.0; z = 0.0;
+  }
+
+  Collider(float x_, float y_, float z_, float hx, float hy, float hz) :
+  half_size_x(hx), half_size_y(hy), half_size_z(hz)  {
+    x = x_; y = y_; z = z_;
+  }
+
+  Collider(const Point& p, float hx, float hy, float hz) : 
+  half_size_x(hx), half_size_y(hy), half_size_z(hz) {
+    x = p.x; y = p.y; z = p.z;
   }
 };
 
-/** struct Grid
- * @brief 2D representation of obstacle map
- */
-struct Grid {
-  int size_x;                        // grid size in north
-  int size_y;                        // grid size in east
-  int x0;                            // grid starting(min) point in north
-  int y0;                            // grid starting(min) point in east
-  vector<vector<bool>> is_obstacle;  // is_obstacle[i][j] is true
-                                     // if x0 + i and y0 + j is obstacle
+// /** struct Grid
+//  * @brief 2D representation of obstacle map
+//  */
+// struct Grid {
+//   int size_x;                        // grid size in north
+//   int size_y;                        // grid size in east
+//   int x0;                            // grid starting(min) point in north
+//   int y0;                            // grid starting(min) point in east
+//   vector<vector<bool>> is_obstacle;  // is_obstacle[i][j] is true
+//                                      // if x0 + i and y0 + j is obstacle
 
-  Grid(int sx, int sy, int x_start = 0, int y_start = 0)
-      : size_x(sx), size_y(sy), x0(x_start), y0(y_start) {
-    is_obstacle = vector<vector<bool>>(sx, vector<bool>(sy, false));
-  }
-};
+//   Grid(int sx, int sy, int x_start = 0, int y_start = 0)
+//       : size_x(sx), size_y(sy), x0(x_start), y0(y_start) {
+//     is_obstacle = vector<vector<bool>>(sx, vector<bool>(sy, false));
+//   }
+// };
 
 /** struct Edge
  * @brief

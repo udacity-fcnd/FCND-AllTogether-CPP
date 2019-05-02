@@ -29,12 +29,13 @@ public:
     return home;
   }
 
-  /** class AstarPlanner
-   *  @brief create grid representation of a 2D configuration space based on
-   *  given obstacle data, drone altitude and saety distance
-   *
-   */
-  Grid create_grid_from_map(const vector<Collider>& data, const float altitude);
+  // /** class AstarPlanner
+  //  *  @brief create grid representation of a 2D configuration space based on
+  //  *  given obstacle data, drone altitude and saety distance
+  //  *
+  //  */
+  // Grid create_grid_from_map(const vector<Collider>& data, const float altitude);
+  
   /** class AstarPlanner
    *  @brief create (Voronoi)graph representation of a 2D configuration space
    * based on given obstacle data, drone altitude and saety distance
