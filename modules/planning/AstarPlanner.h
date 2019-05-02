@@ -34,8 +34,9 @@ public:
   //  *  given obstacle data, drone altitude and saety distance
   //  *
   //  */
-  // Grid create_grid_from_map(const vector<Collider>& data, const float altitude);
-  
+  // Grid create_grid_from_map(const vector<Collider>& data, const float
+  // altitude);
+
   /** class AstarPlanner
    *  @brief create (Voronoi)graph representation of a 2D configuration space
    * based on given obstacle data, drone altitude and saety distance
@@ -45,8 +46,9 @@ public:
                               const float altitude);
 
   // Astar search over graph
-  void astar_graph_search(const Graph& graph, const Point& start, const Point& goal, 
-                          unordered_map<Point, Point, PointHash>& came_from, 
+  void astar_graph_search(const Graph& graph, const Point& start,
+                          const Point& goal,
+                          unordered_map<Point, Point, PointHash>& came_from,
                           unordered_map<Point, float, PointHash>& cost_so_far);
 
   /**

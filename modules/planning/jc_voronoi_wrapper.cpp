@@ -19,7 +19,8 @@ void plot(int x, int y, unsigned char* image, int width, int height,
           int nchannels, unsigned char* color) {
   if (x < 0 || y < 0 || x > (width - 1) || y > (height - 1)) return;
   int index = y * width * nchannels + x * nchannels;
-  for (int i = 0; i < nchannels; ++i) {
+  for (int i = 0; i < nchannels; ++i)
+  {
     image[index + i] = color[i];
   }
 }
@@ -31,15 +32,18 @@ void draw_line(int x0, int y0, int x1, int y1, unsigned char* image, int width,
   int dy = -abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
   int err = dx + dy, e2;  // error value e_xy
 
-  for (;;) {  // loop
+  for (;;)
+  {  // loop
     plot(x0, y0, image, width, height, nchannels, color);
     if (x0 == x1 && y0 == y1) break;
     e2 = 2 * err;
-    if (e2 >= dy) {
+    if (e2 >= dy)
+    {
       err += dy;
       x0 += sx;
     }  // e_xy+e_x > 0
-    if (e2 <= dx) {
+    if (e2 <= dx)
+    {
       err += dx;
       y0 += sy;
     }  // e_xy+e_y < 0
@@ -88,15 +92,18 @@ void draw_triangle(const jcv_point* v0, const jcv_point* v1,
 
   // Rasterize
   jcv_point p;
-  for (p.y = (jcv_real)minY; p.y <= maxY; p.y++) {
-    for (p.x = (jcv_real)minX; p.x <= maxX; p.x++) {
+  for (p.y = (jcv_real)minY; p.y <= maxY; p.y++)
+  {
+    for (p.x = (jcv_real)minX; p.x <= maxX; p.x++)
+    {
       // Determine barycentric coordinates
       int w0 = orient2d(v1, v2, &p);
       int w1 = orient2d(v2, v0, &p);
       int w2 = orient2d(v0, v1, &p);
 
       // If p is on or inside all edges, render pixel.
-      if (w0 >= 0 && w1 >= 0 && w2 >= 0) {
+      if (w0 >= 0 && w1 >= 0 && w2 >= 0)
+      {
         plot((int)p.x, (int)p.y, image, width, height, nchannels, color);
       }
     }
@@ -105,14 +112,16 @@ void draw_triangle(const jcv_point* v0, const jcv_point* v1,
 
 void relax_points(const jcv_diagram* diagram, jcv_point* points) {
   const jcv_site* sites = jcv_diagram_get_sites(diagram);
-  for (int i = 0; i < diagram->numsites; ++i) {
+  for (int i = 0; i < diagram->numsites; ++i)
+  {
     const jcv_site* site = &sites[i];
     jcv_point sum = site->p;
     int count = 1;
 
     const jcv_graphedge* edge = site->edges;
 
-    while (edge) {
+    while (edge)
+    {
       sum.x += edge->pos[0].x;
       sum.y += edge->pos[0].y;
       ++count;
@@ -167,7 +176,8 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
   dimensions.x = (jcv_real)width;
   dimensions.y = (jcv_real)height;
   const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
-  while (edge) {
+  while (edge)
+  {
     // Remaps the point from the input space to image space
     jcv_point p0 =
         remap(&edge->pos[0], &diagram.min, &diagram.max, &dimensions);
@@ -183,7 +193,8 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
   }
 
   // generate image
-  if (outputfile) {
+  if (outputfile)
+  {
     printf("Generating Images ...\n");
     jcv_image_generator(numpoints, points, width, height, &diagram, outputfile);
   }
@@ -214,7 +225,8 @@ void jcv_image_generator(const int count, const jcv_point* points,
   // you can iterate over the sites and get all edges easily
   // generate sites
   const jcv_site* sites = jcv_diagram_get_sites(diagram);
-  for (int i = 0; i < diagram->numsites; ++i) {
+  for (int i = 0; i < diagram->numsites; ++i)
+  {
     const jcv_site* site = &sites[i];
 
     srand((unsigned int)site->index);  // generating colors for the triangles
@@ -228,7 +240,8 @@ void jcv_image_generator(const int count, const jcv_point* points,
     jcv_point s = remap(&site->p, &diagram->min, &diagram->max, &dimensions);
 
     const jcv_graphedge* e = site->edges;
-    while (e) {
+    while (e)
+    {
       jcv_point p0 =
           remap(&e->pos[0], &diagram->min, &diagram->max, &dimensions);
       jcv_point p1 =
@@ -240,7 +253,8 @@ void jcv_image_generator(const int count, const jcv_point* points,
   }
 
   // Plot the sites
-  for (int i = 0; i < count; ++i) {
+  for (int i = 0; i < count; ++i)
+  {
     jcv_point p = remap(&points[i], &diagram->min, &diagram->max, &dimensions);
     plot((int)p.x, (int)p.y, image, width, height, 3, color_pt);
   }
@@ -248,7 +262,8 @@ void jcv_image_generator(const int count, const jcv_point* points,
   // flip image
   int stride = width * 3;
   uint8_t* row = (uint8_t*)malloc((size_t)stride);
-  for (int y = 0; y < height / 2; ++y) {
+  for (int y = 0; y < height / 2; ++y)
+  {
     memcpy(row, &image[y * stride], (size_t)stride);
     memcpy(&image[y * stride], &image[(height - 1 - y) * stride],
            (size_t)stride);

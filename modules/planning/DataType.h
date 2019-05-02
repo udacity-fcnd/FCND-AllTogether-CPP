@@ -17,15 +17,21 @@ class PointwCost : public Point {
 public:
   float cost;
   PointwCost() : cost(0.0) {
-    x = 0.0; y = 0.0; z = 0.0;
+    x = 0.0;
+    y = 0.0;
+    z = 0.0;
   }
 
   PointwCost(float x_, float y_, float z_, float cost_) : cost(cost_) {
-    x = x_; y = y_; z = z_;
+    x = x_;
+    y = y_;
+    z = z_;
   }
 
   PointwCost(const Point& p, float cost_) : cost(cost_) {
-    x = p.x; y = p.y; z = p.z;
+    x = p.x;
+    y = p.y;
+    z = p.z;
   }
 
   Point get_pos() const {
@@ -45,25 +51,30 @@ public:
  * @brief obstacle point with geometry
  */
 class Collider : public Point {
-public: 
-
+public:
   float half_size_x;
   float half_size_y;
   float half_size_z;
 
-  Collider(float hx, float hy, float hz) : 
-  half_size_x(hx), half_size_y(hy), half_size_z(hz) {
-    x = 0.0; y = 0.0; z = 0.0;
+  Collider(float hx, float hy, float hz)
+      : half_size_x(hx), half_size_y(hy), half_size_z(hz) {
+    x = 0.0;
+    y = 0.0;
+    z = 0.0;
   }
 
-  Collider(float x_, float y_, float z_, float hx, float hy, float hz) :
-  half_size_x(hx), half_size_y(hy), half_size_z(hz)  {
-    x = x_; y = y_; z = z_;
+  Collider(float x_, float y_, float z_, float hx, float hy, float hz)
+      : half_size_x(hx), half_size_y(hy), half_size_z(hz) {
+    x = x_;
+    y = y_;
+    z = z_;
   }
 
-  Collider(const Point& p, float hx, float hy, float hz) : 
-  half_size_x(hx), half_size_y(hy), half_size_z(hz) {
-    x = p.x; y = p.y; z = p.z;
+  Collider(const Point& p, float hx, float hy, float hz)
+      : half_size_x(hx), half_size_y(hy), half_size_z(hz) {
+    x = p.x;
+    y = p.y;
+    z = p.z;
   }
 };
 
@@ -123,7 +134,7 @@ public:
     return V;
   }
 
-  void addEdge(const Point& u, const Point& v, const float cost){
+  void addEdge(const Point& u, const Point& v, const float cost) {
     edges[u].emplace_back(v, u.dist(v));
   }
 

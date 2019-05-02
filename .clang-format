@@ -10,19 +10,17 @@ Standard:                               Cpp11
 AccessModifierOffset:                   -2
 IndentWidth:                            2
 SortIncludes:                           false
----
-# Control of individual brace wrapping cases.
-BreakBeforeBraces: Custom
+BreakBeforeBraces:                      Custom
 BraceWrapping:
-  AfterControlStatement: true
-  AfterClass:      false
-  AfterEnum:       false
-  AfterFunction:   false
-  AfterNamespace:  false
-  AfterObjCDeclaration: false
-  AfterStruct:     false
-  AfterUnion:      false
-  BeforeCatch:     false
-  BeforeElse:      false
-  IndentBraces:    true
+  AfterControlStatement:                true
+  AfterClass:                           false
+  AfterEnum:                            false
+  AfterFunction:                        false
+  AfterNamespace:                       false
+  AfterObjCDeclaration:                 false
+  AfterStruct:                          false
+  AfterUnion:                           false
+  BeforeCatch:                          false
+  BeforeElse:                           false
+  IndentBraces:                         false
 ---
