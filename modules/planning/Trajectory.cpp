@@ -15,8 +15,7 @@ Trajectory::Trajectory(const string& filename) {
 
 Trajectory::~Trajectory() {
   // Close any open logging files
-  if (_log_file)
-  {
+  if (_log_file) {
     fclose(_log_file);
   }
 }
@@ -25,8 +24,7 @@ bool Trajectory::ReadFile(const string& filename) {
   traj.clear();
 
   FILE* f = fopen(filename.c_str(), "r");
-  if (!f)
-  {
+  if (!f) {
     return false;
   }
 
@@ -34,8 +32,7 @@ bool Trajectory::ReadFile(const string& filename) {
   buf[511] = 0;  // null char
 
   // read line by line...
-  while (fgets(buf, 510, f))
-  {
+  while (fgets(buf, 510, f)) {
     string s(buf);
 
     ParseLine(filename, s);
@@ -47,8 +44,7 @@ bool Trajectory::ReadFile(const string& filename) {
   // check the length of the trajectory vector
   // if there are no points in the trajectory file, then use the initial
   // position as the only trajectory point
-  if (traj.size() == 0)
-  {
+  if (traj.size() == 0) {
     ParamsHandle config = SimpleConfig::GetInstance();
     TrajectoryPoint traj_pt;
     // TODO: no quad naming here.
@@ -69,8 +65,7 @@ void Trajectory::ParseLine(const string& filename, const string& s) {
 
   // Ignore comments
   if (firstNonWS == std::string::npos || s[firstNonWS] == '#' ||
-      firstNonWS == '/')
-  {
+      firstNonWS == '/') {
     return;
   }
 
@@ -95,14 +90,12 @@ void Trajectory::Clear() {
   traj.clear();
 
   // close and reopen the log file
-  if (_log_file)
-  {
+  if (_log_file) {
     fclose(_log_file);
     _log_file = nullptr;
   }
 
-  if (!_log_filename.empty())
-  {
+  if (!_log_filename.empty()) {
     _log_file = fopen(_log_filename.c_str(), "w");
   }
 }
@@ -111,12 +104,10 @@ void Trajectory::SetLogFile(const string& filename) {
   _log_filename = filename;
 
   // Close any file that might have been open and open the new file
-  if (_log_file)
-  {
+  if (_log_file) {
     fclose(_log_file);
 
-    if (_log_filename != "")
-    {
+    if (_log_filename != "") {
       _log_file = fopen(_log_filename.c_str(), "w");
     }
   }
@@ -126,8 +117,7 @@ void Trajectory::AddTrajectoryPoint(TrajectoryPoint traj_pt) {
   traj.push_back(traj_pt);
 
   // If there is a log file, write the point to file
-  if (_log_file)
-  {
+  if (_log_file) {
     WriteTrajectoryPointToFile(_log_file, traj_pt);
   }
 }
@@ -136,18 +126,14 @@ TrajectoryPoint Trajectory::NextTrajectoryPoint(float time) {
   if (traj.empty()) return TrajectoryPoint();
 
   // Loop through the trajectory vector and get the next trajectory point
-  for (int i = (int)traj.size() - 1; i >= 0; i--)
-  {
-    if (traj.at(i).time < time)
-    {
+  for (int i = (int)traj.size() - 1; i >= 0; i--) {
+    if (traj.at(i).time < time) {
       _curTrajPoint = i;
       // interpolation
-      if (i == (int)traj.size() - 1)
-      {
+      if (i == (int)traj.size() - 1) {
         // we're at the end of the trajectory
         return traj.at(i);
-      } else
-      {
+      } else {
         float dt = traj.at(i + 1).time - traj.at(i).time;
         float alpha = (time - traj.at(i).time) / dt;
         float beta = 1.f - alpha;
@@ -175,8 +161,7 @@ TrajectoryPoint Trajectory::NextTrajectoryPoint(float time) {
 }
 
 void Trajectory::WriteTrajectoryPointToFile(FILE* f, TrajectoryPoint traj_pt) {
-  if (!f)
-  {
+  if (!f) {
     return;
   }
 

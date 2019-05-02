@@ -51,6 +51,10 @@ public:
                           unordered_map<Point, Point, PointHash>& came_from,
                           unordered_map<Point, float, PointHash>& cost_so_far);
 
+  vector<Point> reconstruct_path(
+      const Point& start, const Point& goal,
+      unordered_map<Point, Point, PointHash>& came_from);
+
   /**
    * @brief heuristic function for cost-to-go estimation
    */

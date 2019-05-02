@@ -119,7 +119,17 @@ int main() {
   // Grid grid = test.create_grid_from_map(colliders_subset, 10.0);
   // cout << "Grid size: x=" << grid.size_x << " y=" << grid.size_y << endl;
 
+  cout << "Build graph for map...\n";
   Graph graph = test.create_graph_from_map(colliders_subset, 10.0);
   cout << "Graph Vertex NO: " << graph.getVertex() << endl;
-  return 0;
+
+  cout << "Start Astart search...\n";
+  Point start(0.0, 0.0, 0.0);
+  Point goal(0.0, 0.0, 0.0);
+  unordered_map<Point, Point, PointHash> came_from;
+  unordered_map<Point, float, PointHash> cost_so_far;
+  test.astar_graph_search(graph, start, goal, came_from, cost_so_far);
+
+  cout << "Reconstruct path...\n";
+  vector<Point> path = test.reconstruct_path(start, goal, came_from);
 }
