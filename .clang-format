@@ -4,7 +4,7 @@ BasedOnStyle: Google
 Language:                               Cpp
 PointerAlignment:                       Right
 AllowShortBlocksOnASingleLine:          false
-AllowShortFunctionsOnASingleLine:       Empty
+AllowShortFunctionsOnASingleLine:       false
 Cpp11BracedListStyle:                   true
 Standard:                               Cpp11
 AccessModifierOffset:                   -2

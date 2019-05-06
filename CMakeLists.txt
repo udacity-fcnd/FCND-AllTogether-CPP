@@ -10,6 +10,9 @@ set(CMAKE_CXX_FLAGS "-Wall -O2 -Wno-deprecated")
 set(Qt5Core_DIR /home/jz/Qt/5.10.0/gcc_64/lib/cmake/Qt5Core)
 set(Qt5Network_DIR /home/jz/Qt/5.10.0/gcc_64/lib/cmake/Qt5Network)
 set(Qt5Widgets_DIR /home/jz/Qt/5.10.0/gcc_64/lib/cmake/Qt5Widgets)
+set(GeographicLib_DIR /usr/local/share/cmake/GeographicLib)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${GeographicLib_DIR})
 
 # required library
 find_package(Qt5Core REQUIRED)
@@ -18,16 +21,17 @@ find_package(Qt5Widgets REQUIRED)
 # /System/Library/Frameworks/GLUT.framework
 find_package(GLUT REQUIRED)
 include_directories(${GLUT_INCLUDE_DIR})
-# /System/Library/Frameworks/OpenGL.framework
+# /System/Library/Frameworks/OpenGL.frameork
 find_package(OpenGL REQUIRED)
 include_directories(${OPENGL_INCLUDE_DIR})
 # find_package(GL REQUIRED)
 # find_package(pthread REQUIRED)
+find_package (GeographicLib REQUIRED)
+include_directories (${GeographicLib_INCLUDE_DIRS})
 
+#include root directory
 message("Root Directory:" ${CMAKE_CURRENT_SOURCE_DIR})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-# include_directories(modules)
-# include_directories(third_party)
 
 FILE(GLOB SOURCES
       modules/*.cpp
@@ -69,6 +73,7 @@ target_link_libraries(FCNDSim
         Qt5::Widgets
         ${GLUT_LIBRARIES}
         ${OPENGL_LIBRARIES}
+        ${GeographicLib_LIBRARIES}
         pthread)
 
 ############################## test ###############################
@@ -97,7 +102,8 @@ add_executable(test_astar
         ${test_astar})
 target_link_libraries(test_astar 
         ${GLUT_LIBRARIES}
-        ${OPENGL_LIBRARIES})
+        ${OPENGL_LIBRARIES}
+        ${GeographicLib_LIBRARIES})
 
 # test voronoi diagram
 set(test_voronoi
@@ -110,3 +116,14 @@ set(test_voronoi
 add_executable(test_voronoi 
     ${test_voronoi})
 target_link_libraries(test_voronoi m)
+
+# test coordinates
+set(test_coord
+      modules/test/unittest_Coordinates.cpp
+      modules/common/Coordinates.cpp
+      modules/common/Coordinates.h 
+      )
+add_executable(test_coord 
+    ${test_coord})
+target_link_libraries(test_coord 
+    ${GeographicLib_LIBRARIES})
