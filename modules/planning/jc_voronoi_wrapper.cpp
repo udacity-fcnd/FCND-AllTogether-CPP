@@ -1,6 +1,7 @@
 #include <cstdlib>
 #include <cstdint>
-#include <cstdio>
+// #include <cstdio>
+#include <iostream>
 
 #define JC_VORONOI_IMPLEMENTATION
 // If you wish to use doubles
@@ -135,15 +136,15 @@ inline jcv_point remap(const jcv_point* pt, const jcv_point* min,
 
 jcv_point convert_vpoint_to_jcvpoint(const Point& p) {
   jcv_point jcv_p;
-  jcv_p.x = p.x;
-  jcv_p.y = p.y;
+  jcv_p.x = ceil(p.x * 10) / 10;
+  jcv_p.y = ceil(p.y * 10) / 10;
   return jcv_p;
 }
 
 Point convert_jcvpoint_to_vpoint(const jcv_point& p) {
   Point v_p;
-  v_p.x = p.x;
-  v_p.y = p.y;
+  v_p.x = ceil(p.x * 10) / 10;
+  v_p.y = ceil(p.y * 10) / 10;
   return v_p;
 }
 
@@ -166,6 +167,7 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
   jcv_point dimensions;
   dimensions.x = (jcv_real)width;
   dimensions.y = (jcv_real)height;
+
   const jcv_edge* edge = jcv_diagram_get_edges(&diagram);
   while (edge) {
     // Remaps the point from the input space to image space
@@ -204,7 +206,7 @@ void jcv_image_generator(const int count, const jcv_point* points,
   memset(image, 0, imagesize);
 
   unsigned char color_pt[] = {255, 255, 255};
-  unsigned char color_line[] = {220, 220, 220};
+  unsigned char color_line[] = {255, 255, 255};
 
   jcv_point dimensions;
   dimensions.x = (jcv_real)width;
@@ -217,16 +219,6 @@ void jcv_image_generator(const int count, const jcv_point* points,
   for (int i = 0; i < diagram->numsites; ++i) {
     const jcv_site* site = &sites[i];
 
-    srand((unsigned int)site->index);  // generating colors for the triangles
-
-    unsigned char color_tri[3];
-    unsigned char basecolor = 120;
-    color_tri[0] = basecolor + (unsigned char)(rand() % (235 - basecolor));
-    color_tri[1] = basecolor + (unsigned char)(rand() % (235 - basecolor));
-    color_tri[2] = basecolor + (unsigned char)(rand() % (235 - basecolor));
-
-    jcv_point s = remap(&site->p, &diagram->min, &diagram->max, &dimensions);
-
     const jcv_graphedge* e = site->edges;
     while (e) {
       jcv_point p0 =
@@ -234,7 +226,9 @@ void jcv_image_generator(const int count, const jcv_point* points,
       jcv_point p1 =
           remap(&e->pos[1], &diagram->min, &diagram->max, &dimensions);
 
-      draw_triangle(&s, &p0, &p1, image, width, height, 3, color_tri);
+      draw_line((int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, image, width,
+                height, 3, color_line);
+
       e = e->next;
     }
   }

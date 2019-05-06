@@ -1,19 +1,34 @@
 #pragma once
 
+#include <iomanip>
 #include <vector>
 #include <unordered_map>
 #include <cmath>
 #include "modules/math/V3F.h"
 
-#define EPS 1e-6
-
 using std::unordered_map;
 using std::vector;
+
 namespace planning {
 
-typedef V3F Point;
+#define EPSF 1e-3
+#define ROW_MAX 99999
 
-class PointwCost : public Point {
+class Point : public V3F {
+public:
+  Point() : V3F() {
+  }
+  Point(const float x_, const float y_, const float z_) : V3F(x_, y_, z_) {
+  }
+  inline bool operator==(const V3F& b) const {
+    return dist(b) < EPSF;
+  }
+  inline bool operator!=(const V3F& b) const {
+    return dist(b) >= EPSF;
+  }
+};
+
+class PointwCost : public V3F {
 public:
   float cost;
   PointwCost() : cost(0.0) {
@@ -50,7 +65,7 @@ public:
 /** struct Collider
  * @brief obstacle point with geometry
  */
-class Collider : public Point {
+class Collider : public V3F {
 public:
   float half_size_x;
   float half_size_y;
@@ -102,19 +117,19 @@ struct Edge {
   Point start;
   Point next;
   float weight;
-  Edge(Point& u, Point& v, float cost) : start(u), next(v), weight(cost) {}
+  Edge(Point& u, Point& v, float cost) : start(u), next(v), weight(cost) {
+  }
 };
 
 // When using std::unordered_map<T>, we need to have std::hash<T> or
 // provide a custom hash function in the constructor to unordered_map.
 class PointHash {
 public:
-  std::size_t operator()(const Point& u) const {
-    auto hash1 = std::hash<float>{}(u.x);
-    auto hash2 = std::hash<float>{}(u.y);
-    auto hash3 = std::hash<float>{}(u.z);
+  long long operator()(const Point& u) const {
+    auto hash1 = std::hash<int>{}(ceil(u.x * 10));
+    auto hash2 = std::hash<int>{}(ceil(u.y * 10));
 
-    return hash1 ^ hash2 ^ hash3;
+    return hash1 * ROW_MAX + hash2;
   }
 };
 
@@ -128,10 +143,12 @@ public:
 
   void setVertex() {
     V = edges.size();
+    for (auto iter = edges.begin(); iter != edges.end(); ++iter)
+      vertices.push_back((*iter).first);
   }
 
-  int getVertex() const {
-    return V;
+  vector<Point> getVertex() const {
+    return vertices;
   }
 
   void addEdge(const Point& u, const Point& v, const float cost) {
@@ -143,11 +160,16 @@ public:
   }
 
   vector<PointwCost> neighbors(const Point& u) const {
-    return edges.at(u);
+    if (edges.find(u) == edges.end())
+      return {};
+    else
+      return edges.at(u);
   }
 
 private:
   int V;  // NO. of vertices
+
+  vector<Point> vertices;
 
   unordered_map<Point, vector<PointwCost>, PointHash> edges;
 };

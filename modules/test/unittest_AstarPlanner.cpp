@@ -90,7 +90,7 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
 }
 
 void test_read_collider(float sol, float truth) {
-  assert(abs(sol - truth) < eps);
+  assert(sol == truth);
 }
 
 int main() {
@@ -121,15 +121,37 @@ int main() {
 
   cout << "Build graph for map...\n";
   Graph graph = test.create_graph_from_map(colliders_subset, 10.0);
-  cout << "Graph Vertex NO: " << graph.getVertex() << endl;
+  vector<Point> vertices = graph.getVertex();
+  cout << "Graph Vertex NO: " << vertices.size() << endl;
 
-  cout << "Start Astart search...\n";
-  Point start(0.0, 0.0, 0.0);
-  Point goal(0.0, 0.0, 0.0);
+  Point start = vertices[5];
+  cout << "Start point: " << start.x << ' ' << start.y << endl;
+  for (auto& v : vertices)
+    if (v == start) {
+      cout << "Found starting point in graph!\n";
+      break;
+    }
+  assert(!graph.neighbors(start).empty());
+
+  Point goal = vertices[100];
+  cout << "Goal point: " << goal.x << ' ' << goal.y << endl;
+  for (auto& v : vertices)
+    if (v == goal) {
+      cout << "Found goal point in graph!\n";
+      break;
+    }
+  assert(!graph.neighbors(goal).empty());
+
+  cout << "Start Astar search...\n";
   unordered_map<Point, Point, PointHash> came_from;
   unordered_map<Point, float, PointHash> cost_so_far;
   test.astar_graph_search(graph, start, goal, came_from, cost_so_far);
 
   cout << "Reconstruct path...\n";
   vector<Point> path = test.reconstruct_path(start, goal, came_from);
+  cout << "Path size: " << path.size() << endl;
+
+  cout << "Prune path ...\n";
+  vector<Point> pruned_path = test.prune_path(path);
+  cout << "Pruned path size: " << pruned_path.size() << endl;
 }

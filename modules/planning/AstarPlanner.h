@@ -9,8 +9,10 @@ namespace planning {
 
 class AstarPlanner : public BaseQuadPlanner {
 public:
-  AstarPlanner() {}
-  ~AstarPlanner() {}
+  AstarPlanner() {
+  }
+  ~AstarPlanner() {
+  }
 
   /** class AstarPlanner
    * @brief set and get home position
@@ -55,6 +57,11 @@ public:
       const Point& start, const Point& goal,
       unordered_map<Point, Point, PointHash>& came_from);
 
+  bool collinear(const Point& p1, const Point& p2, const Point& p3,
+                 float epsilon = 1e-6);
+
+  vector<Point> prune_path(const vector<Point>& path);
+
   /**
    * @brief heuristic function for cost-to-go estimation
    */
@@ -63,8 +70,10 @@ public:
   }
 
 private:
-  Point home;
-  float safety_distance{5.0};
+  Point home;  // home position (lat, lon, alt) in global coordinate
+
+  float safety_distance{5.0};  // safety distance away from obstacle
+
   /** class AstarPlanner
    * @brief create Voronoi graph edges given obstacle data
    */

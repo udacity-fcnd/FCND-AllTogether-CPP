@@ -1,12 +1,14 @@
 #include <climits>
 #include <iostream>
 #include <queue>
-#include <string>
+#include <vector>
+#include <list>
 
 #include "modules/planning/AstarPlanner.h"
 #include "modules/planning/DataType.h"
 #include "modules/planning/jc_voronoi_wrapper.h"
 
+using std::list;
 using std::vector;
 
 namespace planning {
@@ -93,7 +95,7 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
   // initialize empty grid
   vector<Point> points(data.size());  // obstacle center positions
 
-  // populate grid with obstacles
+  // populate obstacle center points (sites in Voronoi diagram)
   for (size_t i = 0; i < data.size(); ++i) {
     points[i].x = data[i].x - grid_x_start;
     points[i].y = data[i].y - grid_y_start;
@@ -112,7 +114,7 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
   graph.setVertex();
 
   return graph;
-}
+}  // namespace planning
 
 vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
                                    const int width, const int height) {
@@ -124,8 +126,8 @@ vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
   // convert_vpoint_to_jcvpoint()
   for (size_t i = 0; i < numpoints; ++i) {
     jcv_points[i] = convert_vpoint_to_jcvpoint(vpoints[i]);
-    assert(jcv_points[i].x > 0 && jcv_points[i].x < width);
-    assert(jcv_points[i].y > 0 && jcv_points[i].y < height);
+    assert(jcv_points[i].x >= 0 && jcv_points[i].x <= width);
+    assert(jcv_points[i].y >= 0 && jcv_points[i].y <= height);
   }
 
   std::cout << "Calling Voronoi and Building Graph...\n";
@@ -153,16 +155,28 @@ void AstarPlanner::astar_graph_search(
     frontier.pop();
 
     if (current == goal) {
+      std::cout << "Arrive at final goal, exit astar search...\n";
       break;
+    }
+
+    if (graph.neighbors(current).empty()) {
+      std::cout << "No pathexists for vertex: " << current.x << ' ' << current.y
+                << '\n';
+      throw "No path exists for vertex ...";
     }
 
     for (auto& next : graph.neighbors(current)) {
       Point next_pos = next.get_pos();
+
       float new_cost = cost_so_far[current] + next.cost;
+
       if (!cost_so_far.count(next_pos) || new_cost < cost_so_far[next_pos]) {
         cost_so_far[next_pos] = new_cost;
+
         float priority = new_cost + heuristic(next_pos, goal);
+
         frontier.emplace(next_pos, priority);
+
         came_from[next_pos] = current;
       }
     }
@@ -173,14 +187,58 @@ vector<Point> AstarPlanner::reconstruct_path(
     const Point& start, const Point& goal,
     unordered_map<Point, Point, PointHash>& came_from) {
   vector<Point> path;
-  Point current = goal;
+
+  Point current = goal;  // from goal backwards
+
   while (current != start) {
     path.push_back(current);
     current = came_from[current];
   }
-  path.push_back(start);
+  path.push_back(start);  // add start at end
+
   std::reverse(path.begin(), path.end());
   return path;
+}
+
+/** check collinearity among 3 points in 2D space
+ * @brief Three points lie on the straight line if the area formed by the
+ * triangle of these three points is zero. So we will check if the area formed
+ * by the triangle is zero or not.
+ * Formula for area of triangle is :
+ * 0.5 * [x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)]
+ */
+bool AstarPlanner::collinear(const Point& p1, const Point& p2, const Point& p3,
+                             float eps) {
+  float area =
+      p1.x * (p2.y - p3.y) + p2.x * (p3.y - p1.y) + p3.x * (p1.y - p2.y);
+  area *= 0.5;
+
+  if (abs(area) < eps)
+    return true;
+  else
+    return false;
+}
+
+vector<Point> AstarPlanner::prune_path(const vector<Point>& path) {
+  if (path.size() < 3) return path;
+
+  list<Point> plist(path.begin(), path.end());
+
+  auto iter = next(plist.begin());
+  while (iter != prev(plist.end())) {
+    Point& p1 = *prev(iter);
+    Point& p2 = *iter;
+    Point& p3 = *next(iter);
+
+    if (collinear(p1, p2, p3, EPSF)) {
+      plist.erase(iter++);
+    } else {
+      iter++;
+    }
+  }
+
+  vector<Point> pruned_path(plist.begin(), plist.end());
+  return pruned_path;
 }
 
 }  // namespace planning
