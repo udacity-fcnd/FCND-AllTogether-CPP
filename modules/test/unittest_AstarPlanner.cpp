@@ -119,39 +119,7 @@ int main() {
   // Grid grid = test.create_grid_from_map(colliders_subset, 10.0);
   // cout << "Grid size: x=" << grid.size_x << " y=" << grid.size_y << endl;
 
-  cout << "Build graph for map...\n";
-  Graph graph = test.create_graph_from_map(colliders_subset, 10.0);
-  vector<Point> vertices = graph.getVertex();
-  cout << "Graph Vertex NO: " << vertices.size() << endl;
+  test.run_astar_planner(colliders_subset, 10.0);
 
-  Point start = vertices[5];
-  cout << "Start point: " << start.x << ' ' << start.y << endl;
-  for (auto& v : vertices)
-    if (v == start) {
-      cout << "Found starting point in graph!\n";
-      break;
-    }
-  assert(!graph.neighbors(start).empty());
-
-  Point goal = vertices[100];
-  cout << "Goal point: " << goal.x << ' ' << goal.y << endl;
-  for (auto& v : vertices)
-    if (v == goal) {
-      cout << "Found goal point in graph!\n";
-      break;
-    }
-  assert(!graph.neighbors(goal).empty());
-
-  cout << "Start Astar search...\n";
-  unordered_map<Point, Point, PointHash> came_from;
-  unordered_map<Point, float, PointHash> cost_so_far;
-  test.astar_graph_search(graph, start, goal, came_from, cost_so_far);
-
-  cout << "Reconstruct path...\n";
-  vector<Point> path = test.reconstruct_path(start, goal, came_from);
-  cout << "Path size: " << path.size() << endl;
-
-  cout << "Prune path ...\n";
-  vector<Point> pruned_path = test.prune_path(path);
-  cout << "Pruned path size: " << pruned_path.size() << endl;
+  return 0;
 }

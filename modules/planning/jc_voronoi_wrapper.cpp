@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <cstdint>
-// #include <cstdio>
 #include <iostream>
 
 #define JC_VORONOI_IMPLEMENTATION
@@ -153,15 +152,13 @@ Point convert_jcvpoint_to_vpoint(const jcv_point& p) {
  */
 vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
                                 const int width, const int height,
-                                const char* outputfile) {
+                                Image& image) {
   jcv_diagram diagram;
   memset(&diagram, 0, sizeof(jcv_diagram));
 
-  printf("Generating Voronoi Diagram...\n");
   jcv_diagram_generate(numpoints, (const jcv_point*)points, 0, &diagram);
 
   // generate edges
-  printf("Generating Voronoi Edges...\n");
   vector<Edge> edges;
 
   jcv_point dimensions;
@@ -185,10 +182,7 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
   }
 
   // generate image
-  if (outputfile) {
-    printf("Generating Images ...\n");
-    jcv_image_generator(numpoints, points, width, height, &diagram, outputfile);
-  }
+  jcv_image_generator(numpoints, points, width, height, &diagram, image);
 
   jcv_diagram_free(&diagram);
 
@@ -200,11 +194,7 @@ vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
  */
 void jcv_image_generator(const int count, const jcv_point* points,
                          const int width, const int height,
-                         const jcv_diagram* diagram, const char* outputfile) {
-  size_t imagesize = (size_t)(width * height * 3);
-  unsigned char* image = (unsigned char*)malloc(imagesize);
-  memset(image, 0, imagesize);
-
+                         const jcv_diagram* diagram, Image& image) {
   unsigned char color_pt[] = {255, 255, 255};
   unsigned char color_line[] = {255, 255, 255};
 
@@ -226,7 +216,7 @@ void jcv_image_generator(const int count, const jcv_point* points,
       jcv_point p1 =
           remap(&e->pos[1], &diagram->min, &diagram->max, &dimensions);
 
-      draw_line((int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, image, width,
+      draw_line((int)p0.x, (int)p0.y, (int)p1.x, (int)p1.y, image.image, width,
                 height, 3, color_line);
 
       e = e->next;
@@ -236,25 +226,7 @@ void jcv_image_generator(const int count, const jcv_point* points,
   // Plot the sites
   for (int i = 0; i < count; ++i) {
     jcv_point p = remap(&points[i], &diagram->min, &diagram->max, &dimensions);
-    plot((int)p.x, (int)p.y, image, width, height, 3, color_pt);
+    plot((int)p.x, (int)p.y, image.image, width, height, 3, color_pt);
   }
-
-  // flip image
-  int stride = width * 3;
-  uint8_t* row = (uint8_t*)malloc((size_t)stride);
-  for (int y = 0; y < height / 2; ++y) {
-    memcpy(row, &image[y * stride], (size_t)stride);
-    memcpy(&image[y * stride], &image[(height - 1 - y) * stride],
-           (size_t)stride);
-    memcpy(&image[(height - 1 - y) * stride], row, (size_t)stride);
-  }
-
-  char path[512];
-  sprintf(path, "%s", outputfile);
-  wrap_stbi_write_png(path, width, height, 3, image, stride);
-  printf("wrote %s\n", path);
-
-  free(image);
-  free(row);
 }
 }  // namespace planning

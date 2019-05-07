@@ -1,20 +1,11 @@
 #ifndef JC_VORONOI_WRAPPER_
 #define JC_VORONOI_WRAPPER_
 
-#include <stdint.h>
+#include <vector>
+#include <cstdint>
 #include "third_party/voronoi/jc_voronoi/src/jc_voronoi.h"
 #include "modules/planning/DataType.h"
-#include <vector>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-// wrap it in a library to avoid too many warnings
-extern int wrap_stbi_write_png(char const* filename, int w, int h, int comp,
-                               const void* data, int stride_in_bytes);
-#ifdef __cplusplus
-}
-#endif
+#include "modules/planning/AstarPlanner.h"
 
 namespace planning {
 /**
@@ -46,11 +37,11 @@ Point convert_jcvpoint_to_vpoint(const jcv_point& p);
 
 vector<Edge> jcv_edge_generator(const int numpoints, jcv_point* points,
                                 const int width, const int height,
-                                const char* outputfile);
+                                Image& image);
 
 void jcv_image_generator(const int count, const jcv_point* points,
                          const int width, const int height,
-                         const jcv_diagram* diagram, const char* outputfile);
+                         const jcv_diagram* diagram, Image& image);
 
 }  // namespace planning
 #endif  // JC_VORONOI_WRAPPER_

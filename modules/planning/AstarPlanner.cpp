@@ -8,10 +8,78 @@
 #include "modules/planning/DataType.h"
 #include "modules/planning/jc_voronoi_wrapper.h"
 
+using std::cout;
 using std::list;
 using std::vector;
 
 namespace planning {
+void AstarPlanner::run_astar_planner(const vector<Collider>& data,
+                                     const float altitude) {
+  cout << "Read obstacle points from map...\n";
+  int width = 0, height = 0;
+  vector<Point> vpoints = read_vpoints_from_map(data, altitude, width, height);
+
+  // allocate space for image
+  const char* outputfile = "Voronoi_Diagram.png";
+  Image image(height, width);
+
+  vector<Edge> edges = Voronoi(vpoints, width, height, image);
+  if (edges.size() <= 0) {
+    std::cout << "AstartPlanner::Invalid Voronoi Edge Generated!\n";
+    throw "planning::AstartPlanner: Incorrect Size of Edges in Voronoi Graph";
+  }
+
+  Graph graph;
+  for (const auto& e : edges) {
+    graph.addEdge(e);
+  }
+  graph.setVertex();
+
+  vector<Point> vertices = graph.getVertex();
+  cout << "Graph Vertex NO: " << vertices.size() << endl;
+
+  Point start = vertices[5];
+  cout << "Start point: " << start.x << ' ' << start.y << endl;
+  for (auto& v : vertices)
+    if (v == start) {
+      cout << "Found starting point in graph!\n";
+      break;
+    }
+  assert(!graph.neighbors(start).empty());
+
+  Point goal = vertices[4500];
+  cout << "Goal point: " << goal.x << ' ' << goal.y << endl;
+  for (auto& v : vertices)
+    if (v == goal) {
+      cout << "Found goal point in graph!\n";
+      break;
+    }
+  assert(!graph.neighbors(goal).empty());
+
+  cout << "Start Astar search...\n";
+  unordered_map<Point, Point, PointHash> came_from;
+  unordered_map<Point, float, PointHash> cost_so_far;
+  astar_graph_search(graph, start, goal, came_from, cost_so_far);
+
+  cout << "Reconstruct path...\n";
+  vector<Point> path = reconstruct_path(start, goal, came_from);
+  cout << "Path size: " << path.size() << endl;
+
+  cout << "Prune path ...\n";
+  vector<Point> pruned_path = prune_path(path);
+  cout << "Pruned path size: " << pruned_path.size() << endl;
+
+  unsigned char color_line[] = {255, 0, 0};
+  for (int i = 0; i < pruned_path.size() - 1; ++i)
+    draw_line((int)pruned_path[i].x, (int)pruned_path[i].y,
+              (int)pruned_path[i + 1].x, (int)pruned_path[i + 1].y, image.image,
+              width, height, 3, color_line);
+
+  if (outputfile != nullptr) {
+    image.flip_image();
+    image.write_image(outputfile);
+  }
+}
 
 // Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
 //                                         const float altitude) {
@@ -66,8 +134,9 @@ namespace planning {
 //   return grid;
 // }
 
-Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
-                                          const float altitude) {
+vector<Point> AstarPlanner::read_vpoints_from_map(const vector<Collider>& data,
+                                                  const float altitude,
+                                                  int& width, int& height) {
   // find min and max coordinates in north and east directions
   int grid_x_start = INT_MAX, grid_x_end = INT_MIN;
   int grid_y_start = INT_MAX, grid_y_end = INT_MIN;  // grid corner positions
@@ -89,8 +158,8 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
   }
 
   // grid size in north and east directions
-  int size_x = grid_x_end - grid_x_start;
-  int size_y = grid_y_end - grid_y_start;
+  width = grid_x_end - grid_x_start;
+  height = grid_y_end - grid_y_start;
 
   // initialize empty grid
   vector<Point> points(data.size());  // obstacle center positions
@@ -101,27 +170,14 @@ Graph AstarPlanner::create_graph_from_map(const vector<Collider>& data,
     points[i].y = data[i].y - grid_y_start;
   }
 
-  vector<Edge> edges = Voronoi(points, size_x, size_y);
-  if (edges.size() <= 0) {
-    std::cout << "AstartPlanner::Invalid Voronoi Edge Generated!\n";
-    throw "planning::AstartPlanner: Incorrect Size of Edges in Voronoi Graph";
-  }
-
-  Graph graph;
-  for (const auto& e : edges) {
-    graph.addEdge(e);
-  }
-  graph.setVertex();
-
-  return graph;
-}  // namespace planning
+  return points;
+}
 
 vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
-                                   const int width, const int height) {
+                                   const int width, const int height,
+                                   Image& image) {
   size_t numpoints = vpoints.size();
-  jcv_point* jcv_points = 0;
-  jcv_points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)numpoints);
-  const char* outputfile = "Voronoi_Diagram.png";
+  jcv_point* jcv_points = new jcv_point[numpoints];
 
   // convert_vpoint_to_jcvpoint()
   for (size_t i = 0; i < numpoints; ++i) {
@@ -132,7 +188,7 @@ vector<Edge> AstarPlanner::Voronoi(const vector<Point>& vpoints,
 
   std::cout << "Calling Voronoi and Building Graph...\n";
   vector<Edge> edges =
-      jcv_edge_generator((int)numpoints, jcv_points, width, height, outputfile);
+      jcv_edge_generator((int)numpoints, jcv_points, width, height, image);
 
   free(jcv_points);
 

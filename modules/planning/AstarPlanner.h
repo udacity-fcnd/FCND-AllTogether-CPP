@@ -14,6 +14,9 @@ public:
   ~AstarPlanner() {
   }
 
+  void Init() {
+  }
+
   /** class AstarPlanner
    * @brief set and get home position
    */
@@ -31,6 +34,11 @@ public:
     return home;
   }
 
+  /**
+   *@brief run astar planning
+   */
+  void run_astar_planner(const vector<Collider>& data, const float altitude);
+
   // /** class AstarPlanner
   //  *  @brief create grid representation of a 2D configuration space based on
   //  *  given obstacle data, drone altitude and saety distance
@@ -44,8 +52,15 @@ public:
    * based on given obstacle data, drone altitude and saety distance
    *
    */
-  Graph create_graph_from_map(const vector<Collider>& data,
-                              const float altitude);
+  vector<Point> read_vpoints_from_map(const vector<Collider>& data,
+                                      const float altitude, int& width,
+                                      int& height);
+
+  /** class AstarPlanner
+   * @brief create Voronoi graph edges given obstacle data
+   */
+  vector<Edge> Voronoi(const vector<Point>& vpoints, const int width,
+                       const int height, Image& image);
 
   // Astar search over graph
   void astar_graph_search(const Graph& graph, const Point& start,
@@ -73,12 +88,6 @@ private:
   Point home;  // home position (lat, lon, alt) in global coordinate
 
   float safety_distance{5.0};  // safety distance away from obstacle
-
-  /** class AstarPlanner
-   * @brief create Voronoi graph edges given obstacle data
-   */
-  vector<Edge> Voronoi(const vector<Point>& points, const int width,
-                       const int height);
 };
 
 }  // namespace planning

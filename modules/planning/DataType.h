@@ -1,6 +1,8 @@
 #pragma once
 
 #include <iomanip>
+#include <iostream>
+#include <cstring>
 #include <vector>
 #include <unordered_map>
 #include <cmath>
@@ -8,6 +10,16 @@
 
 using std::unordered_map;
 using std::vector;
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+// wrap it in a library to avoid too many warnings
+extern int wrap_stbi_write_png(char const* filename, int w, int h, int comp,
+                               const void* data, int stride_in_bytes);
+#ifdef __cplusplus
+}
+#endif
 
 namespace planning {
 
@@ -90,6 +102,44 @@ public:
     x = p.x;
     y = p.y;
     z = p.z;
+  }
+};
+
+class Image {
+public:
+  unsigned char* image;
+  int height, width;
+  int stride;
+  Image(int h, int w) : height(h), width(w), stride(width * 3) {
+    if (height * width > 0) {
+      size_t imagesize = (size_t)(width * height * 3);
+      image = new unsigned char[imagesize];
+      std::memset(image, 0, imagesize);
+    } else {
+      image = nullptr;
+    }
+  }
+  ~Image() {
+    delete[] image;
+  }
+
+  void flip_image() {
+    // flip image
+    uint8_t* row = new uint8_t[stride];
+    for (int y = 0; y < height / 2; ++y) {
+      std::memcpy(row, &image[y * stride], (size_t)stride);
+      std::memcpy(&image[y * stride], &image[(height - 1 - y) * stride],
+                  (size_t)stride);
+      std::memcpy(&image[(height - 1 - y) * stride], row, (size_t)stride);
+    }
+    delete[] row;
+  }
+
+  void write_image(const char* outputfile) {
+    char path[512];
+    sprintf(path, "%s", outputfile);
+    wrap_stbi_write_png(path, width, height, 3, image, stride);
+    printf("wrote %s\n", path);
   }
 };
 
