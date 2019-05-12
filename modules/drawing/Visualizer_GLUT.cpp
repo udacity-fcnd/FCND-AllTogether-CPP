@@ -62,7 +62,9 @@ void _g_OnWindowClose() {
   }
 }
 
-void _g_OnExit() { exit(0); }
+void _g_OnExit() {
+  exit(0);
+}
 
 bool _g_keySpecialStates[246] = {0};
 bool _g_keyStates[256] = {0};
@@ -86,7 +88,7 @@ void _g_OnSpecialKeyUp(int key, int x, int y) {
 }
 
 Visualizer_GLUT::Visualizer_GLUT(int* argcp, char** argv)
-    : _camera(V3D(-5, -1, -5), V3D(0, 0, -1)), _draw_dt_ms(.1f) {
+    : _camera(V3D(0, 0, -8), V3D(1, 1, 5)), _draw_dt_ms(.1f) {
   _camera.SetUp(V3D(0, 0, -1));
   glutInit(argcp, argv);
   glQuadric = gluNewQuadric();
@@ -121,7 +123,9 @@ Visualizer_GLUT::~Visualizer_GLUT() {
   _g_viz = NULL;
 }
 
-bool Visualizer_GLUT::IsKeyDown(uint8_t key) { return _g_keyStates[key]; }
+bool Visualizer_GLUT::IsKeyDown(uint8_t key) {
+  return _g_keyStates[key];
+}
 
 bool Visualizer_GLUT::IsSpecialKeyDown(int specialKey) {
   return _g_keySpecialStates[specialKey];
@@ -160,7 +164,7 @@ void Visualizer_GLUT::Update(float simTime) {
 void Visualizer_GLUT::initializeGL(int* argcp, char** argv) {
   glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB | GLUT_DEPTH);
   glutInitWindowPosition(200, 200);
-  glutInitWindowSize(800, 600);
+  glutInitWindowSize(1200, 900);
   _glutWindowNum = glutCreateWindow("Simulator!");
 
   glutMotionFunc(&_g_OnMouseMove);
@@ -596,7 +600,9 @@ void Visualizer_GLUT::VisualizeTrajectory(const Trajectory& traj,
   }
 }
 
-void Visualizer_GLUT::OnResize(int, int) { Paint(); }
+void Visualizer_GLUT::OnResize(int, int) {
+  Paint();
+}
 
 void Visualizer_GLUT::OnMouseClick(int button, int state, int x, int y) {
   lastPosX = x;
@@ -704,7 +710,7 @@ GLuint Visualizer_GLUT::MakeVolumeCallList() {
 
   glColor3f(.65f, .65f, .65f);
   // floor
-  GLRectangle(V3F(0, 0, 0), V3F(0, 0, -1), V3F(1, 0, 0), 5, 5, 5, 5);
+  GLRectangle(V3F(0, 0, 0), V3F(0, 0, -1), V3F(1, 0, 0), 25, 25, 25, 25);
 
   glDisable(GL_POLYGON_OFFSET_FILL);
 
@@ -712,7 +718,7 @@ GLuint Visualizer_GLUT::MakeVolumeCallList() {
   glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);  // wireframe mode!
   // glBegin(GL_LINES);
   glColor3d(.55, .55, .55);
-  GLRectangle(V3F(0, 0, 0), V3F(0, 0, -1), V3F(1, 0, 0), 5, 5, 5, 5);
+  GLRectangle(V3F(0, 0, 0), V3F(0, 0, -1), V3F(1, 0, 0), 25, 25, 25, 25);
   // glEnd();
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 

@@ -1,0 +1,33 @@
+# Following planned trajectory
+
+INCLUDE QuadPhysicalParams.txt
+
+# simulation setup
+Sim.RunMode = Repeat
+Sim.EndTime = 100
+Sim.Vehicle1 = Quad
+
+# Controller selection
+Quad.ControlType = QuadControl
+Quad.ControlConfig = QuadControlParams
+
+# reference trajectory
+QuadControlParams.Trajectory=traj/AstarExample.txt
+
+# graphing commands
+Commands.1=AddGraph1.Quad.PosFollowErr
+Commands.2=Toggle.RefTrajectory
+Commands.3=Toggle.ActualTrajectory
+Commands.4=AddGraph1.WindowThreshold(Quad.PosFollowErr,.25,3)
+
+INCLUDE QuadControlParams.txt
+INCLUDE Simulation.txt
+
+# Vehicle-specific config
+[Quad:Quad]
+InitialPos=0,0,-1
+TrajectoryOffset=0,0,0
+ControlConfig = QuadControlParamsFF
+
+[QuadControlParamsFF:QuadControlParams]
+Trajectory=traj/AstarExample.txt
