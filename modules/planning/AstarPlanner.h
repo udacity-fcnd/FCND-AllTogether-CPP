@@ -9,8 +9,13 @@ namespace planning {
 
 class AstarPlanner : public BaseQuadPlanner {
 public:
-  AstarPlanner() {}
-  ~AstarPlanner() {}
+  AstarPlanner() {
+  }
+  ~AstarPlanner() {
+  }
+
+  void Init() {
+  }
 
   /** class AstarPlanner
    * @brief set and get home position
@@ -19,63 +24,70 @@ public:
     this->home = home;
   }
 
-  void set_home(const double lat, const double lon, const double alt = 0.0) {
-    home.lat = lat;
-    home.lon = lon;
-    home.alt = alt;
+  void set_home(const float lat, const float lon, const float alt = 0.0) {
+    home.x = lat;
+    home.y = lon;
+    home.z = alt;
   }
 
   const Point& get_home() const {
     return home;
   }
 
-  /** class AstarPlanner
-   *  @brief create grid representation of a 2D configuration space based on
-   *  given obstacle data, drone altitude and saety distance
-   *
+  /**
+   *@brief run astar planning
    */
-  Grid create_grid_from_map(const vector<Collider>& data,
-                            const double altitude);
+  void run_astar_planner(const vector<Collider>& data, const float altitude);
+
+  // /** class AstarPlanner
+  //  *  @brief create grid representation of a 2D configuration space based on
+  //  *  given obstacle data, drone altitude and saety distance
+  //  *
+  //  */
+  // Grid create_grid_from_map(const vector<Collider>& data, const float
+  // altitude);
+
   /** class AstarPlanner
    *  @brief create (Voronoi)graph representation of a 2D configuration space
    * based on given obstacle data, drone altitude and saety distance
    *
    */
-  Graph create_graph_from_map(const vector<Collider>& data,
-                              const double altitude);
+  vector<Point> read_vpoints_from_map(const vector<Collider>& data,
+                                      const float altitude, int& width,
+                                      int& height);
 
   /** class AstarPlanner
    * @brief create Voronoi graph edges given obstacle data
    */
-  jcv_point convert_vpoint_to_jcvpoint(const Point& p) {
-    jcv_point jcv_p;
-    jcv_p.x = (float)p.lat;
-    jcv_p.y = (float)p.lon;
-    return jcv_p;
-  }
-  Point convert_jcvpoint_to_vpoint(const jcv_point& p) {
-    Point v_p;
-    v_p.lat = (double)p.x;
-    v_p.lon = (double)p.y;
-    return v_p;
-  }
-  Edge convert_jcvedge_to_vedge(const jcv_edge* edges) {
-    jcv_point p_start = edges->pos[0];
-    jcv_point p_end = edges->pos[1];
-    Point a = convert_jcvpoint_to_vpoint(p_start);
-    Point b = convert_jcvpoint_to_vpoint(p_end);
-    double dist = a.dist(b);
-    return Edge(a, b, dist);
-  }
-  vector<Edge> Voronoi(const vector<Point>& points, const int width,
-                       const int height);
+  vector<Edge> Voronoi(const vector<Point>& vpoints, const int width,
+                       const int height, Image& image);
 
-  // Astar search
-  void Astar_Graph();
+  // Astar search over graph
+  void astar_graph_search(const Graph& graph, const Point& start,
+                          const Point& goal,
+                          unordered_map<Point, Point, PointHash>& came_from,
+                          unordered_map<Point, float, PointHash>& cost_so_far);
+
+  vector<Point> reconstruct_path(
+      const Point& start, const Point& goal,
+      unordered_map<Point, Point, PointHash>& came_from);
+
+  bool collinear(const Point& p1, const Point& p2, const Point& p3,
+                 float epsilon = 1e-6);
+
+  vector<Point> prune_path(const vector<Point>& path);
+
+  /**
+   * @brief heuristic function for cost-to-go estimation
+   */
+  float heuristic(const Point& pos, const Point& goal) {
+    return pos.dist(goal);
+  }
 
 private:
-  Point home;
-  double safety_distance{5.0};
+  Point home;  // home position (lat, lon, alt) in global coordinate
+
+  float safety_distance{5.0};  // safety distance away from obstacle
 };
 
 }  // namespace planning

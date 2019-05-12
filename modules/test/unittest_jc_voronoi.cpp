@@ -1,5 +1,9 @@
 #include <vector>
 #include "modules/planning/jc_voronoi_wrapper.h"
+#include "modules/planning/DataType.h"
+
+using namespace std;
+using namespace planning;
 
 int main(int argc, const char** argv) {
   // Number of sites to generate
@@ -9,10 +13,9 @@ int main(int argc, const char** argv) {
   int height = 512;
   int numrelaxations = 0;
 
-  const char* outputfile = NULL;  // "example.png";
+  const char* outputfile = "example.png";
 
   jcv_point* points = 0;
-  jcv_rect* rect = 0;
   points = (jcv_point*)malloc(sizeof(jcv_point) * (size_t)count);
   if (!points) return 0;
 
@@ -27,8 +30,8 @@ int main(int argc, const char** argv) {
 
   // convert_vpoint_to_jcvpoint();
 
-  const jcv_edge* edges = jcv_edge_generator(
-      count, width, height, numrelaxations, points, rect, outputfile);
+  vector<Edge> edges =
+      jcv_edge_generator(count, points, width, height, outputfile);
 
   return 0;
 }

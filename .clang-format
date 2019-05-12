@@ -3,12 +3,24 @@ BasedOnStyle: Google
 ---
 Language:                               Cpp
 PointerAlignment:                       Right
-BreakBeforeBraces:                      Attach
 AllowShortBlocksOnASingleLine:          false
-AllowShortFunctionsOnASingleLine:       Empty
+AllowShortFunctionsOnASingleLine:       false
 Cpp11BracedListStyle:                   true
 Standard:                               Cpp11
 AccessModifierOffset:                   -2
 IndentWidth:                            2
 SortIncludes:                           false
+BreakBeforeBraces:                      Attach
+BraceWrapping:
+  AfterControlStatement:                true
+  AfterClass:                           false
+  AfterEnum:                            false
+  AfterFunction:                        false
+  AfterNamespace:                       false
+  AfterObjCDeclaration:                 false
+  AfterStruct:                          false
+  AfterUnion:                           false
+  BeforeCatch:                          false
+  BeforeElse:                           false
+  IndentBraces:                         false
 ---

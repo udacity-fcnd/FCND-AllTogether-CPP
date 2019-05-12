@@ -31,7 +31,8 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
    * read and set home position
    */
   getline(fin, line);
-  double lat0, lon0;
+  float lat0 = 0.0;
+  float lon0 = 0.0;
   std::replace(line.begin(), line.end(), ',', ' ');
   stringstream ss(line);
   while (!ss.eof()) {
@@ -45,8 +46,8 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
       throw std::runtime_error("AstartPlanner:Unrecognized variable name.");
     }
   }
-  home.lat = lat0;
-  home.lon = lon0;
+  home.x = lat0;
+  home.y = lon0;
 
   /**
    *  skip one line of names
@@ -56,10 +57,9 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
   /**
    * read and set collider position
    */
-  double posX, posY, posZ, halfSizeX, halfSizeY, halfSizeZ;
+  float posX, posY, posZ, halfSizeX, halfSizeY, halfSizeZ;
   while (getline(fin, line)) {
     stringstream ss(line);
-    Collider collid;
 
     getline(ss, val, ',');
     posX = stod(val);
@@ -89,8 +89,8 @@ void readColliderMap(vector<Collider>& colliders, Point& home) {
   return;
 }
 
-void test_read_collider(double sol, double truth) {
-  assert(abs(sol - truth) < eps);
+void test_read_collider(float sol, float truth) {
+  assert(sol == truth);
 }
 
 int main() {
@@ -104,13 +104,22 @@ int main() {
   }
 
   // testing data reading
-  test_read_collider(home.lat, 37.792480);
-  test_read_collider(home.lon, -122.397450);
+  test_read_collider(home.x, 37.792480);
+  test_read_collider(home.y, -122.397450);
+
+  int subset_size = colliders.size();
+
+  vector<Collider> colliders_subset(colliders.begin(),
+                                    colliders.begin() + subset_size);
 
   // test Astar planner
   AstarPlanner test;
   test.set_home(home);
-  Grid grid = test.create_grid_from_map(colliders, 10.0);
-  cout << "Grid size: x=" << grid.size_x << " y=" << grid.size_y << endl;
+
+  // Grid grid = test.create_grid_from_map(colliders_subset, 10.0);
+  // cout << "Grid size: x=" << grid.size_x << " y=" << grid.size_y << endl;
+
+  test.run_astar_planner(colliders_subset, 10.0);
+
   return 0;
 }
