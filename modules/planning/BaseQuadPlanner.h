@@ -5,13 +5,18 @@
 
 class BaseQuadPlanner : public DataSource {
 public:
-  BaseQuadPlanner() {}
-  virtual ~BaseQuadPlanner() {}
+  BaseQuadPlanner() {
+  }
+  virtual ~BaseQuadPlanner() {
+  }
 
-  virtual void Init() {}
-  virtual Trajectory RunPlanner() {}
+  virtual void Init() {
+  }
+  virtual Trajectory RunPlanner() {
+  }
+
+  Trajectory trajectory;
 
 private:
   string _config;
-  Trajectory trajectory;
 };

@@ -1,5 +1,8 @@
 #include <climits>
 #include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <queue>
 #include <vector>
 #include <list>
@@ -7,15 +10,22 @@
 #include "modules/planning/AstarPlanner.h"
 #include "modules/planning/DataType.h"
 #include "modules/planning/jc_voronoi_wrapper.h"
+#include "modules/planning/Trajectory.h"
 
 using std::cout;
+using std::fstream;
+using std::getline;
 using std::list;
+using std::ofstream;
+using std::string;
+using std::stringstream;
 using std::vector;
 
 namespace planning {
-void AstarPlanner::run_astar_planner(const vector<Collider>& data,
-                                     const float altitude) {
-  cout << "Read obstacle points from map...\n";
+void AstarPlanner::run_astar_planner(string map, const float altitude) {
+  vector<Collider> data = read_collider_map(map);
+
+  std::cout << "Read obstacle points from map...\n";
   int width = 0, height = 0;
   vector<Point> vpoints = read_vpoints_from_map(data, altitude, width, height);
 
@@ -69,6 +79,8 @@ void AstarPlanner::run_astar_planner(const vector<Collider>& data,
   vector<Point> pruned_path = prune_path(path);
   cout << "Pruned path size: " << pruned_path.size() << endl;
 
+  // write path to image
+  cout << "Write path to image ...\n";
   unsigned char color_line[] = {255, 0, 0};
   for (int i = 0; i < pruned_path.size() - 1; ++i)
     draw_line((int)pruned_path[i].x, (int)pruned_path[i].y,
@@ -79,6 +91,91 @@ void AstarPlanner::run_astar_planner(const vector<Collider>& data,
     image.flip_image();
     image.write_image(outputfile);
   }
+
+  // wirte path to files
+  return make_trajectory(pruned_path, altitude, 10, 0.1);
+}
+
+// read obstacal map
+vector<Collider> AstarPlanner::read_collider_map(string map) {
+  vector<Collider> colliders;
+  Point map_home;
+  /**
+   *  File pointer
+   */
+  fstream fin;
+
+  /**
+   *  open colliders file
+   */
+  fin.open(map, std::ios::in);
+  if (!fin) {
+    throw std::runtime_error("AstartPlanner:Fail to read colliders.");
+  }
+
+  string line, val, name;
+
+  /**
+   * read and set home position
+   */
+  getline(fin, line);
+  float lat0 = 0.0;
+  float lon0 = 0.0;
+  std::replace(line.begin(), line.end(), ',', ' ');
+  stringstream ss(line);
+  while (!ss.eof()) {
+    ss >> name >> val;
+
+    if (name == "lat0") {
+      lat0 = stod(val);
+    } else if (name == "lon0") {
+      lon0 = stod(val);
+    } else {
+      throw std::runtime_error("AstartPlanner:Unrecognized variable name.");
+    }
+  }
+  map_home.x = lat0;
+  map_home.y = lon0;
+  set_home(map_home);
+
+  /**
+   *  skip one line of names
+   */
+  getline(fin, line);
+
+  /**
+   * read and set collider position
+   */
+  float posX, posY, posZ, halfSizeX, halfSizeY, halfSizeZ;
+  while (getline(fin, line)) {
+    stringstream ss(line);
+
+    getline(ss, val, ',');
+    posX = stod(val);
+
+    getline(ss, val, ',');
+    posY = stod(val);
+
+    getline(ss, val, ',');
+    posZ = stod(val);
+
+    getline(ss, val, ',');
+    halfSizeX = stod(val);
+
+    getline(ss, val, ',');
+    halfSizeY = stod(val);
+
+    getline(ss, val, ',');
+    halfSizeZ = stod(val);
+
+    if (!ss.eof()) {
+      throw std::runtime_error("AstarPlanner:Incorrect collider data format!");
+    }
+
+    colliders.emplace_back(posX, posY, posZ, halfSizeX, halfSizeY, halfSizeZ);
+  }
+
+  return colliders;
 }
 
 // Grid AstarPlanner::create_grid_from_map(const vector<Collider>& data,
@@ -295,6 +392,47 @@ vector<Point> AstarPlanner::prune_path(const vector<Point>& path) {
 
   vector<Point> pruned_path(plist.begin(), plist.end());
   return pruned_path;
+}
+
+void AstarPlanner::make_trajectory(const vector<Point>& path,
+                                   const float altitude, const float velocity,
+                                   const float Ts) {
+#ifdef WRITE_TRAJECTORY_TO_FILE
+  ofstream myfile;
+  myfile.open("../config/traj/AstarExample.txt");
+#endif
+
+  trajectory.Clear();
+  float x_init = path[0].x, y_init = path[0].y;
+  float t = 0.0;
+  for (int i = 1; i < path.size(); ++i) {
+    float dist = path[i].distXY(path[i - 1]);
+    float t_path = dist / velocity;
+    int n = floor(t_path / Ts);
+    float x0 = path[i - 1].x - x_init, y0 = path[i - 1].y - y_init;
+    float x1 = path[i].x - x_init, y1 = path[i].y - y_init;
+    float delta_x = (x1 - x0) / n;
+    float delta_y = (y1 - y0) / n;
+
+    for (int j = 0; j < n; ++j) {
+      TrajectoryPoint tmp;
+      tmp.time = t + j * Ts;
+      tmp.position =
+          V3F((x0 + j * delta_x) / 100, (y0 + j * delta_y) / 100, -1);
+      trajectory.AddTrajectoryPoint(tmp);
+
+#ifdef WRITE_TRAJECTORY_TO_FILE
+      myfile << t + j * Ts << ',' << (x0 + j * delta_x) / 100 << ','
+             << (y0 + j * delta_y) / 100 << ',' << -1 << '\n';
+#endif
+    }
+
+    t += t_path;
+  }
+
+#ifdef WRITE_TRAJECTORY_TO_FILE
+  myfile.close();
+#endif
 }
 
 }  // namespace planning

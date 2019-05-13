@@ -3,6 +3,7 @@
 #include "modules/simulation/BaseDynamics.h"
 #include "modules/math/V4D.h"
 #include "modules/control/BaseController.h"
+#include "modules/planning/AstarPlanner.h"
 #include "third_party/matrix/math.hpp"
 #include "modules/math/LowPassFilter.h"
 #include "modules/drawing/ColorUtils.h"
@@ -13,81 +14,105 @@ typedef shared_ptr<QuadDynamics> QuadcopterHandle;
 class BaseQuadEstimator;
 class SimulatedQuadSensor;
 
-class QuadDynamics : public BaseDynamics
-{
+class QuadDynamics : public BaseDynamics {
 public:
-	static QuadcopterHandle Create(string name, int cnt=0)
-	{
-		QuadcopterHandle ret(new QuadDynamics(name));
-    float hue = (float)cnt*30.f;
+  static QuadcopterHandle Create(string name, int cnt = 0) {
+    QuadcopterHandle ret(new QuadDynamics(name));
+    float hue = (float)cnt * 30.f;
     ret->color = HSVtoRGB(hue + 15.f, 1, 1);
-		return ret;
-	}
+    return ret;
+  }
 
-  QuadDynamics(string name="");
-	virtual ~QuadDynamics() {}; // destructor
-	virtual int Initialize();
+  QuadDynamics(string name = "");
+  virtual ~QuadDynamics(){};  // destructor
+  virtual int Initialize();
 
-  virtual void Run(float dt, float simulationTime, int &idum,  // updates the simulation
-      V3F externalForceInGlobalFrame = V3F(),    // required to take net forces into account
-      V3F externalMomentInBodyFrame = V3F());   // required to take net moments into account
-                  
-	virtual void SetCommands(const VehicleCommand& cmd);	// update commands in the simulator coming from a command2 packet
+  virtual void Run(float dt, float simulationTime,
+                   int& idum,  // updates the simulation
+                   V3F externalForceInGlobalFrame =
+                       V3F(),  // required to take net forces into account
+                   V3F externalMomentInBodyFrame =
+                       V3F());  // required to take net moments into account
 
-  virtual void Dynamics(float dt, float simTime, V3F external_force, V3F external_moment, int& idum);
+  virtual void SetCommands(
+      const VehicleCommand& cmd);  // update commands in the simulator coming
+                                   // from a command2 packet
 
-	double GetRotDistInt() {return rotDisturbanceInt;};
-	double GetXyzDistInt() {return xyzDisturbanceInt;};
-	double GetRotDistBW() {return rotDisturbanceBW;};
-	double GetXyzDistBW() {return xyzDisturbanceBW;};
-	double GetGyroNoiseInt() {return gyroNoiseInt;};
+  virtual void Dynamics(float dt, float simTime, V3F external_force,
+                        V3F external_moment, int& idum);
+
+  double GetRotDistInt() {
+    return rotDisturbanceInt;
+  };
+  double GetXyzDistInt() {
+    return xyzDisturbanceInt;
+  };
+  double GetRotDistBW() {
+    return rotDisturbanceBW;
+  };
+  double GetXyzDistBW() {
+    return xyzDisturbanceBW;
+  };
+  double GetGyroNoiseInt() {
+    return gyroNoiseInt;
+  };
 
   virtual bool GetData(const string& name, float& ret) const;
   virtual vector<string> GetFields() const;
 
   void Reset();
 
-	VehicleCommand GetCommands() const { return curCmd; }
+  VehicleCommand GetCommands() const {
+    return curCmd;
+  }
 
-  void ResetState(V3F pos=V3F(), V3F vel=V3F(), Quaternion<float> att=Quaternion<float>(), V3F omega=V3F());
-  void SetPosVelAttOmega(V3F pos=V3F(), V3F vel=V3F(), Quaternion<float> att=Quaternion<float>(), V3F omega=V3F()); 
+  void ResetState(V3F pos = V3F(), V3F vel = V3F(),
+                  Quaternion<float> att = Quaternion<float>(),
+                  V3F omega = V3F());
+  void SetPosVelAttOmega(V3F pos = V3F(), V3F vel = V3F(),
+                         Quaternion<float> att = Quaternion<float>(),
+                         V3F omega = V3F());
 
-	void TurnOffNonidealities();
+  void TurnOffNonidealities();
 
-	void RunRoomConstraints(const V3F& oldPos);
-  
-	VehicleCommand curCmd;
+  void RunRoomConstraints(const V3F& oldPos);
 
-	float GetArmLength() const { return L; }
+  VehicleCommand curCmd;
 
-  ControllerHandle controller;
+  float GetArmLength() const {
+    return L;
+  }
+
+  shared_ptr<planning::AstarPlanner> planner;
+  shared_ptr<BaseController> controller;
   shared_ptr<BaseQuadEstimator> estimator;
-  
+
   friend class Visualizer_GLUT;
 
   // sensors
-  vector<shared_ptr<SimulatedQuadSensor> > sensors;
+  vector<shared_ptr<SimulatedQuadSensor>> sensors;
 
 protected:
   matrix::Vector<float, 4> motorCmdsN;
   matrix::Vector<float, 4> motorCmdsOld;
 
-	// useful matrices/vectors that are recomputed from the state at each timestep
-	double YPR[3];
+  // useful matrices/vectors that are recomputed from the state at each timestep
+  double YPR[3];
 
   //////////////////////////////////////////////////////////////////
   // vehicle geometry and mass properties
   float cx;
   float cy;
-  float L; // distance from body z axis to the prop
+  float L;  // distance from body z axis to the prop
 
   // properties of the prop/motor system as modeled
-  double tauaUp, tauaDown; // time constant
-  float kappa; // Nm drag per N lift
+  double tauaUp, tauaDown;  // time constant
+  float kappa;              // Nm drag per N lift
   float minMotorThrust, maxMotorThrust;
 
-	double xyzDisturbanceInt, xyzDisturbanceBW, rotDisturbanceInt, rotDisturbanceBW, gyroNoiseInt;
-	V3D xyzDisturbance, rotDisturbance;
+  double xyzDisturbanceInt, xyzDisturbanceBW, rotDisturbanceInt,
+      rotDisturbanceBW, gyroNoiseInt;
+  V3D xyzDisturbance, rotDisturbance;
 
   float randomMotorForceMag;
 
@@ -95,8 +120,7 @@ protected:
 
   float _lastPosFollowErr;
 
-  V3F color;  
+  V3F color;
   string _flightMode;
-	bool _useIdealEstimator; 
-
+  bool _useIdealEstimator;
 };

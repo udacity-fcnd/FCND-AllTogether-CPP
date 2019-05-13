@@ -4,6 +4,7 @@
 #include "modules/planning/BaseQuadPlanner.h"
 #include "modules/planning/DataType.h"
 #include "modules/planning/jc_voronoi_wrapper.h"
+#include "modules/planning/Trajectory.h"
 
 namespace planning {
 
@@ -37,7 +38,12 @@ public:
   /**
    *@brief run astar planning
    */
-  void run_astar_planner(const vector<Collider>& data, const float altitude);
+  void run_astar_planner(string map, const float altitude);
+
+  void make_trajectory(const vector<Point>& path, const float altitude,
+                       const float velocity, const float Ts);
+
+  vector<Collider> read_collider_map(string map);
 
   // /** class AstarPlanner
   //  *  @brief create grid representation of a 2D configuration space based on
